@@ -1,0 +1,3 @@
+{
+  "extends": ["@humuus/eslint-config/next.js"]
+}

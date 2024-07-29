@@ -1,0 +1,21 @@
+{
+  "name": "@humuus/nakama",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "build": "docker buildx ./Dockerfile",
+    "dev": "docker compose -f ./docker-compose.yml up -d --build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "nakama-runtime": "github:heroiclabs/nakama-common"
+  }
+}
