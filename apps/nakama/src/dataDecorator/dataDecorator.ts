@@ -23,6 +23,7 @@ let dataDecorator_MatchInit: nkruntime.MatchInitFunction<dataDecorator_State> =
       owner: params['creator'],
       playing: false,
       playerStates: {},
+      companyVotes: {},
     };
 
     return {
@@ -153,6 +154,17 @@ let dataDecorator_MatchLoop: nkruntime.MatchLoopFunction<dataDecorator_State> =
         case dataDecorator_OpCodes.Message:
           dataDecorator_messageRecieved(dispatcher, logger, state, message, nk);
           break;
+        case dataDecorator_OpCodes.VoteCompany:
+          dataDecorator_VoteCompany(dispatcher, logger, state, message, nk);
+          break;
+        case dataDecorator_OpCodes.ResultCompany:
+          if (message.sender.userId == state.owner) {
+            dataDecorator_CompanyResult(dispatcher, logger, state, message, nk);
+          }
+          break;
+        case dataDecorator_OpCodes.StartMinigame:
+          dataDecorator_StartMinigame(dispatcher, logger, state, message, nk);
+          break;
         default:
           dispatcher.broadcastMessage(
             message.opCode,
@@ -223,7 +235,7 @@ function dataDecorator_closeMatch(
     null
   );
 }
-
+/* Old Match starting code
 function dataDecorator_startMatch(
   dispatcher: nkruntime.MatchDispatcher,
   logger: nkruntime.Logger,
@@ -265,6 +277,31 @@ function dataDecorator_startMatch(
   state.label.open = 0;
 
   logger.info(`Match started of type: ${state.label.matchType}`);
+}*/
+
+function dataDecorator_startMatch(
+  dispatcher: nkruntime.MatchDispatcher,
+  logger: nkruntime.Logger,
+  state: dataDecorator_State,
+  message: nkruntime.MatchMessage,
+  nk: nkruntime.Nakama
+) {
+  if (message.sender.userId != state.owner) {
+    return;
+  }
+
+  const allReady = Object.keys(state.playerStates).every(
+    (userId) => state.playerStates[userId].Ready
+  );
+  if (!allReady) {
+    return;
+  }
+
+  dispatcher.broadcastMessage(dataDecorator_OpCodes.StartMatch, '', null, null);
+  state.playing = true;
+  state.label.open = 0;
+
+  logger.info(`Match started of type: ${state.label.matchType}`);
 }
 
 function dataDecorator_messageRecieved(
@@ -275,7 +312,7 @@ function dataDecorator_messageRecieved(
   nk: nkruntime.Nakama
 ) {
   logger.info(`Recieved message: ${nk.binaryToString(message.data)}`);
-  var posiblePlayers = state.playerStates;
+  var posiblePlayers = JSON.parse(JSON.stringify(state.playerStates));
   delete posiblePlayers[message.sender.userId];
   const posiblePlayersIds = Object.keys(posiblePlayers);
   const posiblePlayersLength = posiblePlayersIds.length;
@@ -292,4 +329,102 @@ function dataDecorator_messageRecieved(
     ],
     null
   );
+}
+
+function dataDecorator_VoteCompany(
+  dispatcher: nkruntime.MatchDispatcher,
+  logger: nkruntime.Logger,
+  state: dataDecorator_State,
+  message: nkruntime.MatchMessage,
+  nk: nkruntime.Nakama
+) {
+  let playerVote: number;
+  try {
+    playerVote = JSON.parse(nk.binaryToString(message.data));
+  } catch {
+    return;
+  }
+  state.companyVotes[message.sender.userId] = playerVote;
+  dispatcher.broadcastMessage(
+    dataDecorator_OpCodes.VoteCompany,
+    playerVote.toString(),
+    null,
+    message.sender
+  );
+  if (
+    Object.keys(state.companyVotes).length >=
+    Object.keys(state.playerStates).length
+  ) {
+    dataDecorator_CompanyResult(dispatcher, logger, state, message, nk);
+  }
+}
+
+function dataDecorator_CompanyResult(
+  dispatcher: nkruntime.MatchDispatcher,
+  logger: nkruntime.Logger,
+  state: dataDecorator_State,
+  message: nkruntime.MatchMessage,
+  nk: nkruntime.Nakama
+) {
+  const voteCounts: { [vote: number]: number } = {};
+  for (let userId in state.companyVotes) {
+    if (state.companyVotes.hasOwnProperty(userId)) {
+      let vote = state.companyVotes[userId];
+      if (voteCounts[vote] == null) {
+        voteCounts[vote] = 0;
+      }
+      voteCounts[vote]++;
+    }
+  }
+
+  let mostVotedCompany: number = 0;
+  let highestVoteCount = 0;
+
+  for (let vote in voteCounts) {
+    if (voteCounts.hasOwnProperty(vote)) {
+      if (voteCounts[vote] > highestVoteCount) {
+        highestVoteCount = voteCounts[vote];
+        mostVotedCompany = parseInt(vote, 10);
+      }
+    }
+  }
+
+  dispatcher.broadcastMessage(
+    dataDecorator_OpCodes.ResultCompany,
+    mostVotedCompany.toString(),
+    null,
+    null
+  );
+}
+
+function dataDecorator_StartMinigame(
+  dispatcher: nkruntime.MatchDispatcher,
+  logger: nkruntime.Logger,
+  state: dataDecorator_State,
+  message: nkruntime.MatchMessage,
+  nk: nkruntime.Nakama
+) {
+  if (message.sender.userId != state.owner) {
+    return;
+  }
+
+  const minigames: string[] = JSON.parse(nk.binaryToString(message.data));
+  var usedMinigames = minigames;
+
+  Object.keys(state.playerStates).forEach(function (userId) {
+    const playerState = state.playerStates[userId];
+    const miniGameIndex = (Math.random() * usedMinigames.length) | 0;
+    var minigame = usedMinigames[miniGameIndex];
+    delete usedMinigames[miniGameIndex];
+    if (usedMinigames.length == 0) {
+      usedMinigames = minigames;
+    }
+    dispatcher.broadcastMessage(
+      dataDecorator_OpCodes.StartMinigame,
+      minigame,
+      [playerState.presence],
+      null
+    );
+  });
+  logger.info(`Minigame started of type: ${state.label.matchType}`);
 }

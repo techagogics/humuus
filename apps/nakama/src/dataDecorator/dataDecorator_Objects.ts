@@ -11,6 +11,7 @@ interface dataDecorator_State {
   owner: string;
   // True if there's a game currently in progress.
   playing: boolean;
+  companyVotes: { [userId: string]: number };
 }
 
 enum dataDecorator_OpCodes {
@@ -28,6 +29,14 @@ enum dataDecorator_OpCodes {
   StartMatch = 5,
   // A player wants to send a message to another game.
   Message = 6,
+  // A player voted for a company.
+  VoteCompany = 7,
+  // When all players voted for a company, show the result.
+  ResultCompany = 8,
+  // After Company result, when the round should be started.
+  StartRound = 9,
+  // When the minigame is supposed to be started.
+  StartMinigame = 10,
 }
 
 interface dataDecorator_UserState {
@@ -36,11 +45,4 @@ interface dataDecorator_UserState {
   Ready: boolean;
   Position: number;
   presence: nkruntime.Presence;
-}
-
-interface dataDecorator_UserSendState {
-  UserId: string;
-  Username: string;
-  Ready: boolean;
-  Position: number;
 }

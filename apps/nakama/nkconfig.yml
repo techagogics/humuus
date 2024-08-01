@@ -1,18 +1,21 @@
 name: humuus-1
-data_dir: "/nakama/data/" 
+data_dir: '/nakama/data/'
+shutdown_grace_sec: 10
 console:
   max_message_size_bytes: 409600
   port: 7351
-  username: "humuusadmin"
-  password: "GB9jR6nuNejRmzRpX9kGq"
+  username: 'humuusadmin'
+  password: 'GB9jR6nuNejRmzRpX9kGq'
 logger:
   # stdout: false
-  level: "DEBUG"
-  file: "/nakama/data/logfile.log"
+  level: 'DEBUG'
+  file: '/nakama/data/logfile.log'
 runtime:
-  js_entrypoint: "build/index.js"
+  js_entrypoint: 'build/index.js'
 session:
   token_expiry_sec: 7200 # 2 hours
 socket:
   max_message_size_bytes: 4096 # reserved buffer
   max_request_size_bytes: 131072
+match:
+  max_empty_sec: 70
