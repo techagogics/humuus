@@ -1,7 +1,7 @@
 /* import Nakama from '@/services/nakama'; */
 import { cookies } from 'next/headers';
 import { getOrCreateDeviceId, authenticateWithNakama } from '@/services/auth';
-/* import GuessTheFakePage from './guess-the-fake'; */
+import GuessTheFakePage from './guess-the-fake';
 
 export default async function GamePage() {
   /* const nakamaRef = useRef<Nakama | undefined>(undefined); */
@@ -33,7 +33,7 @@ export default async function GamePage() {
           {/* JSON.stringify(data) */ userId || 'Kein User vorhanden.'}
         </span>
       </div>
-      {/* <GuessTheFakePage /> */}
+      <GuessTheFakePage />
     </>
   );
 }

@@ -138,6 +138,124 @@ export default class Nakama {
     }
   }
 
+  async startMatch(matchType: string): Promise<string> {
+    if (!this.session || !this.socket) {
+      console.error('Session or socket not found!');
+      return '';
+    }
+
+    interface Payload {
+      success: boolean;
+      id: string;
+      joinCode: number;
+      matchType: string;
+    }
+
+    // Uses RPC Function to create a new Match
+    // Returns the MatchID and URL {matchId, url}
+    const newMatchID = await this.client.rpc(this.session, 'Create_Match', {
+      matchType: matchType,
+    });
+
+    let payload = newMatchID.payload as Payload;
+
+    if (payload == undefined) {
+      console.error('New MatchID is undefinded!');
+      return '';
+    }
+
+    if (payload.success == false) {
+      console.error('No Match under this ID!');
+      return '';
+    }
+
+    let url = '/' + payload.matchType + '/' + payload.joinCode;
+
+    // Returns URL for Client to join Match
+    // Empty string if something fails
+    return url;
+  }
+
+  async getMatchURL(joinCode: string): Promise<string> {
+    if (!this.session || !this.socket) {
+      console.error('Session or socket not found!');
+      return '';
+    }
+
+    interface Payload {
+      success: boolean;
+      matchId: string;
+      matchType: string;
+    }
+
+    // Uses RPC Function to get Match by Code
+    // Returns the Match URL {url}
+    const newMatch = await this.client.rpc(
+      this.session,
+      'Find_Match_By_Join_Code',
+      {
+        joinCode: joinCode,
+      }
+    );
+
+    let payload = newMatch.payload as Payload;
+
+    if (payload == undefined) {
+      console.error('No Anwser from Server!');
+      return '';
+    }
+
+    if (payload.success == false) {
+      console.error('No Match under this ID!');
+      return '';
+    }
+
+    let url = '/' + payload.matchType + '/' + joinCode;
+
+    // Returns URL for Client to join Match
+    // Empty string if no Match found under provided Code
+    return url;
+  }
+
+  async getMatchID(joinCode: string): Promise<string> {
+    if (!this.session || !this.socket) {
+      console.error('Session or socket not found!');
+      return '';
+    }
+
+    interface Payload {
+      success: boolean;
+      matchId: string;
+      matchType: string;
+    }
+
+    // Uses RPC Function to get Match by Code
+    // Returns the Match URL {url}
+    const newMatch = await this.client.rpc(
+      this.session,
+      'Find_Match_By_Join_Code',
+      {
+        joinCode: joinCode,
+      }
+    );
+
+    let payload = newMatch.payload as Payload;
+
+    if (payload == undefined) {
+      console.error('No Match under this ID!');
+      return '';
+    }
+
+    if (payload.success == false) {
+      //console.error('No Match under this ID!');
+      return '';
+    }
+
+    // Returns URL for Client to join Match
+    // Empty string if no Match found under provided Code
+    return payload.matchId;
+  }
+
   /* async restoreSession(token: string): Promise<Session> {
     try {
       const session = await Session.restore(token);
