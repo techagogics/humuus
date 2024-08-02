@@ -1,13 +1,12 @@
-const defaultQuiz_Tickrate = 5;
-const defaultQuiz_MaxEmptyTicks =
-  MAX_TIME_WITHOUT_PLAYERS_IN_SEC * defaultQuiz_Tickrate;
+namespace defaultQuiz {
+  const Tickrate = 5;
+  const MaxEmptyTicks = MAX_TIME_WITHOUT_PLAYERS_IN_SEC * Tickrate;
 
-const defaultQuiz_TicksShowingAnswer = 5 * defaultQuiz_Tickrate;
+  const TicksShowingAnswer = 5 * Tickrate;
 
-const defaultQuiz_MaxTicksUntilNext = 20 * defaultQuiz_Tickrate;
+  const MaxTicksUntilNext = 20 * Tickrate;
 
-let defaultQuiz_MatchInit: nkruntime.MatchInitFunction<defaultQuiz_State> =
-  function (
+  export let MatchInit: nkruntime.MatchInitFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
@@ -19,14 +18,14 @@ let defaultQuiz_MatchInit: nkruntime.MatchInitFunction<defaultQuiz_State> =
       joinCode: Number(params['joinCode']),
     };
 
-    let state: defaultQuiz_State = {
+    let state: State = {
       label: label,
       emptyTicks: 0,
       presences: {},
       joinsInProgress: 0,
       playing: false,
       ticksUntilNextQuestion: 0,
-      questions: JSON.parse(defaultQuiz_ExampleQuestions),
+      questions: JSON.parse(ExampleQuestions),
       currentQuestion: -1,
       countAnswers: 0,
       scoreboard: {},
@@ -37,62 +36,61 @@ let defaultQuiz_MatchInit: nkruntime.MatchInitFunction<defaultQuiz_State> =
 
     return {
       state,
-      tickRate: defaultQuiz_Tickrate,
+      tickRate: Tickrate,
       label: JSON.stringify(label),
     };
   };
 
-let defaultQuiz_MatchJoinAttempt: nkruntime.MatchJoinAttemptFunction<defaultQuiz_State> =
-  function (
-    ctx: nkruntime.Context,
-    logger: nkruntime.Logger,
-    nk: nkruntime.Nakama,
-    dispatcher: nkruntime.MatchDispatcher,
-    tick: number,
-    state: defaultQuiz_State,
-    presence: nkruntime.Presence,
-    metadata: { [key: string]: any }
-  ) {
-    // Check if it's a user attempting to rejoin after a disconnect.
-    if (presence.userId in state.presences) {
-      if (state.presences[presence.userId] === null) {
-        // User rejoining after a disconnect.
-        return {
-          state: state,
-          accept: true,
-        };
-      } else {
-        // User attempting to join from 2 different devices at the same time.
+  export let MatchJoinAttempt: nkruntime.MatchJoinAttemptFunction<State> =
+    function (
+      ctx: nkruntime.Context,
+      logger: nkruntime.Logger,
+      nk: nkruntime.Nakama,
+      dispatcher: nkruntime.MatchDispatcher,
+      tick: number,
+      state: State,
+      presence: nkruntime.Presence,
+      metadata: { [key: string]: any }
+    ) {
+      // Check if it's a user attempting to rejoin after a disconnect.
+      if (presence.userId in state.presences) {
+        if (state.presences[presence.userId] === null) {
+          // User rejoining after a disconnect.
+          return {
+            state: state,
+            accept: true,
+          };
+        } else {
+          // User attempting to join from 2 different devices at the same time.
+          return {
+            state: state,
+            accept: false,
+            rejectMessage: 'already joined',
+          };
+        }
+      } else if (state.playing) {
         return {
           state: state,
           accept: false,
-          rejectMessage: 'already joined',
+          rejectMessage: 'In Game',
         };
       }
-    } else if (state.playing) {
+
+      // New player attempting to connect.
+      state.joinsInProgress++;
       return {
-        state: state,
-        accept: false,
-        rejectMessage: 'In Game',
+        state,
+        accept: true,
       };
-    }
-
-    // New player attempting to connect.
-    state.joinsInProgress++;
-    return {
-      state,
-      accept: true,
     };
-  };
 
-let defaultQuiz_MatchJoin: nkruntime.MatchJoinFunction<defaultQuiz_State> =
-  function (
+  export let MatchJoin: nkruntime.MatchJoinFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: defaultQuiz_State,
+    state: State,
     presences: nkruntime.Presence[]
   ) {
     for (const presence of presences) {
@@ -106,36 +104,29 @@ let defaultQuiz_MatchJoin: nkruntime.MatchJoinFunction<defaultQuiz_State> =
         state.matchHost = presence.userId;
       }
 
-      let update: defaultQuiz_PlayerListMessage = {
+      let update: PlayerListMessage = {
         presences: state.presences,
         host: state.matchHost,
         isPresenter: state.hostAsPresenter,
       };
       // Send a message to the user that just joined.
-      dispatcher.broadcastMessage(
-        defaultQuiz_OpCode.PLAYERLIST,
-        JSON.stringify(update)
-      );
+      dispatcher.broadcastMessage(OpCode.PLAYERLIST, JSON.stringify(update));
 
       // Check if we must send a message to this user to update them on the current game state.
       if (state.playing) {
         // There's a game still currently in progress, the player is re-joining after a disconnect. Give them a state update.
-        let update: defaultQuiz_QuestionsMessage = {
+        let update: QuestionsMessage = {
           question: state.questions[state.currentQuestion].question,
         };
 
-        dispatcher.broadcastMessage(
-          defaultQuiz_OpCode.UPDATE,
-          JSON.stringify(update),
-          [presence]
-        );
+        dispatcher.broadcastMessage(OpCode.UPDATE, JSON.stringify(update), [
+          presence,
+        ]);
 
         if (state.ticksUntilNextQuestion < 1) {
-          dispatcher.broadcastMessage(
-            defaultQuiz_OpCode.DONE,
-            JSON.stringify({}),
-            [presence]
-          );
+          dispatcher.broadcastMessage(OpCode.DONE, JSON.stringify({}), [
+            presence,
+          ]);
         }
       } else {
         logger.debug('player %s rejoined game', presence.userId);
@@ -145,14 +136,13 @@ let defaultQuiz_MatchJoin: nkruntime.MatchJoinFunction<defaultQuiz_State> =
     return { state };
   };
 
-let defaultQuiz_MatchLeave: nkruntime.MatchLeaveFunction<defaultQuiz_State> =
-  function (
+  export let MatchLeave: nkruntime.MatchLeaveFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: defaultQuiz_State,
+    state: State,
     presences: nkruntime.Presence[]
   ) {
     for (let presence of presences) {
@@ -160,40 +150,33 @@ let defaultQuiz_MatchLeave: nkruntime.MatchLeaveFunction<defaultQuiz_State> =
       state.presences[presence.userId] = null;
 
       if (presence.userId == state.matchHost && !state.playing) {
-        dispatcher.broadcastMessage(
-          defaultQuiz_OpCode.LEAVE,
-          JSON.stringify({})
-        );
+        dispatcher.broadcastMessage(OpCode.LEAVE, JSON.stringify({}));
         return null;
       }
     }
 
-    let msg: defaultQuiz_PlayerListMessage = {
+    let msg: PlayerListMessage = {
       presences: state.presences,
       host: state.matchHost,
       isPresenter: state.hostAsPresenter,
     };
-    dispatcher.broadcastMessage(
-      defaultQuiz_OpCode.PLAYERLIST,
-      JSON.stringify(msg)
-    );
+    dispatcher.broadcastMessage(OpCode.PLAYERLIST, JSON.stringify(msg));
 
     return { state };
   };
 
-let defaultQuiz_MatchLoop: nkruntime.MatchLoopFunction<defaultQuiz_State> =
-  function (
+  export let MatchLoop: nkruntime.MatchLoopFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: defaultQuiz_State,
+    state: State,
     messages: nkruntime.MatchMessage[]
   ) {
-    if (defaultQuiz_connectedPlayers(state) + state.joinsInProgress === 0) {
+    if (connectedPlayers(state) + state.joinsInProgress === 0) {
       state.emptyTicks++;
-      if (state.emptyTicks >= defaultQuiz_MaxEmptyTicks) {
+      if (state.emptyTicks >= MaxEmptyTicks) {
         // Match has been empty for too long, close it.
         logger.info('closing idle match');
         return null;
@@ -226,7 +209,7 @@ let defaultQuiz_MatchLoop: nkruntime.MatchLoopFunction<defaultQuiz_State> =
 
       for (const message of messages) {
         switch (message.opCode) {
-          case defaultQuiz_OpCode.START:
+          case OpCode.START:
             if (message.sender.userId == state.matchHost) {
               state.playing = true;
 
@@ -251,35 +234,27 @@ let defaultQuiz_MatchLoop: nkruntime.MatchLoopFunction<defaultQuiz_State> =
 
     state.ticksUntilNextQuestion--;
 
-    let timer: defaultQuiz_TimerMessage = {
-      secondsLeft: Math.ceil(
-        state.ticksUntilNextQuestion / defaultQuiz_Tickrate
-      ),
+    let timer: TimerMessage = {
+      secondsLeft: Math.ceil(state.ticksUntilNextQuestion / Tickrate),
       timerName: 'Zeit zum Antworten: ',
     };
 
     if (
       state.countAnswers >=
-      defaultQuiz_connectedPlayers(state) - (state.hostAsPresenter ? 1 : 0)
+      connectedPlayers(state) - (state.hostAsPresenter ? 1 : 0)
     ) {
       state.ticksUntilNextQuestion = 0;
     }
 
     if (state.ticksUntilNextQuestion < 1) {
-      if (state.ticksShowingAnswer >= defaultQuiz_TicksShowingAnswer) {
-        dispatcher.broadcastMessage(
-          defaultQuiz_OpCode.DONE,
-          JSON.stringify({})
-        );
+      if (state.ticksShowingAnswer >= TicksShowingAnswer) {
+        dispatcher.broadcastMessage(OpCode.DONE, JSON.stringify({}));
 
-        let update: defaultQuiz_AnswerMessage = {
+        let update: AnswerMessage = {
           answer: state.questions[state.currentQuestion].answer,
         };
 
-        dispatcher.broadcastMessage(
-          defaultQuiz_OpCode.ANSWER,
-          JSON.stringify(update)
-        );
+        dispatcher.broadcastMessage(OpCode.ANSWER, JSON.stringify(update));
 
         if (state.hostAsPresenter) {
           state.ticksShowingAnswer = 1;
@@ -293,9 +268,7 @@ let defaultQuiz_MatchLoop: nkruntime.MatchLoopFunction<defaultQuiz_State> =
 
       if (!state.hostAsPresenter) {
         timer = {
-          secondsLeft: Math.ceil(
-            state.ticksShowingAnswer / defaultQuiz_Tickrate
-          ),
+          secondsLeft: Math.ceil(state.ticksShowingAnswer / Tickrate),
           timerName: 'Nächste Frage in: ',
         };
         state.ticksShowingAnswer--;
@@ -304,8 +277,8 @@ let defaultQuiz_MatchLoop: nkruntime.MatchLoopFunction<defaultQuiz_State> =
       if (state.ticksShowingAnswer < 1) {
         state.countAnswers = 0;
 
-        state.ticksUntilNextQuestion = defaultQuiz_MaxTicksUntilNext;
-        state.ticksShowingAnswer = defaultQuiz_TicksShowingAnswer;
+        state.ticksUntilNextQuestion = MaxTicksUntilNext;
+        state.ticksShowingAnswer = TicksShowingAnswer;
 
         state.currentQuestion++;
 
@@ -342,43 +315,34 @@ let defaultQuiz_MatchLoop: nkruntime.MatchLoopFunction<defaultQuiz_State> =
             );
           }
 
-          let scoreboard: defaultQuiz_ResultMessage = {
+          let scoreboard: ResultMessage = {
             results: renderScoreboard,
           };
 
-          dispatcher.broadcastMessage(
-            defaultQuiz_OpCode.END,
-            JSON.stringify(scoreboard)
-          );
+          dispatcher.broadcastMessage(OpCode.END, JSON.stringify(scoreboard));
 
           state.playing = false;
 
           return { state };
         }
 
-        let update: defaultQuiz_QuestionsMessage = {
+        let update: QuestionsMessage = {
           question: state.questions[state.currentQuestion].question,
         };
 
-        dispatcher.broadcastMessage(
-          defaultQuiz_OpCode.UPDATE,
-          JSON.stringify(update)
-        );
+        dispatcher.broadcastMessage(OpCode.UPDATE, JSON.stringify(update));
       }
     }
 
-    dispatcher.broadcastMessage(
-      defaultQuiz_OpCode.TIMER,
-      JSON.stringify(timer)
-    );
+    dispatcher.broadcastMessage(OpCode.TIMER, JSON.stringify(timer));
 
     // There's a game in progresstate. Check for input, update match state, and send messages to clientstate.
     for (const message of messages) {
       switch (message.opCode) {
-        case defaultQuiz_OpCode.ANSWER:
+        case OpCode.ANSWER:
           let playerMsg = JSON.parse(
             nk.binaryToString(message.data)
-          ) as defaultQuiz_AnswerMessage;
+          ) as AnswerMessage;
 
           state.countAnswers++;
 
@@ -390,18 +354,18 @@ let defaultQuiz_MatchLoop: nkruntime.MatchLoopFunction<defaultQuiz_State> =
             state.scoreboard[message.sender.userId]++;
           }
 
-          let update: defaultQuiz_StateMessage = {
+          let update: StateMessage = {
             state: true,
           };
 
           dispatcher.broadcastMessage(
-            defaultQuiz_OpCode.CONFIRMED,
+            OpCode.CONFIRMED,
             JSON.stringify(update),
             [message.sender]
           );
           break;
 
-        case defaultQuiz_OpCode.START:
+        case OpCode.START:
           if (
             message.sender.userId == state.matchHost &&
             state.hostAsPresenter &&
@@ -413,9 +377,7 @@ let defaultQuiz_MatchLoop: nkruntime.MatchLoopFunction<defaultQuiz_State> =
 
         default:
           // No other opcodes are expected from the client, so automatically treat it as an error.
-          dispatcher.broadcastMessage(defaultQuiz_OpCode.REJECTED, null, [
-            message.sender,
-          ]);
+          dispatcher.broadcastMessage(OpCode.REJECTED, null, [message.sender]);
           logger.error('Unexpected opcode received: %d', message.opCode);
       }
     }
@@ -423,27 +385,27 @@ let defaultQuiz_MatchLoop: nkruntime.MatchLoopFunction<defaultQuiz_State> =
     return { state };
   };
 
-let defaultQuiz_MatchTerminate: nkruntime.MatchTerminateFunction<defaultQuiz_State> =
-  function (
-    ctx: nkruntime.Context,
-    logger: nkruntime.Logger,
-    nk: nkruntime.Nakama,
-    dispatcher: nkruntime.MatchDispatcher,
-    tick: number,
-    state: defaultQuiz_State,
-    graceSeconds: number
-  ) {
-    return { state };
-  };
+  export let MatchTerminate: nkruntime.MatchTerminateFunction<State> =
+    function (
+      ctx: nkruntime.Context,
+      logger: nkruntime.Logger,
+      nk: nkruntime.Nakama,
+      dispatcher: nkruntime.MatchDispatcher,
+      tick: number,
+      state: State,
+      graceSeconds: number
+    ) {
+      return { state };
+    };
 
-let defaultQuiz_MatchSignal: nkruntime.MatchSignalFunction<defaultQuiz_State> =
-  function (
+  export let MatchSignal: nkruntime.MatchSignalFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: defaultQuiz_State
+    state: State
   ) {
     return { state };
   };
+}

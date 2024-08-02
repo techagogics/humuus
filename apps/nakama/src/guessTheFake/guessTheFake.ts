@@ -1,13 +1,12 @@
-const guessTheFake_Tickrate = 5;
-const guessTheFake_MaxEmptyTicks =
-  MAX_TIME_WITHOUT_PLAYERS_IN_SEC * guessTheFake_Tickrate;
+namespace guessTheFake {
+  const Tickrate = 5;
+  const MaxEmptyTicks = MAX_TIME_WITHOUT_PLAYERS_IN_SEC * Tickrate;
 
-const guessTheFake_TicksShowingAnswer = 5 * guessTheFake_Tickrate;
+  const TicksShowingAnswer = 5 * Tickrate;
 
-const guessTheFake_MaxTicksUntilNext = 20 * guessTheFake_Tickrate;
+  const MaxTicksUntilNext = 20 * Tickrate;
 
-let guessTheFake_MatchInit: nkruntime.MatchInitFunction<guessTheFake_State> =
-  function (
+  export let MatchInit: nkruntime.MatchInitFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
@@ -19,7 +18,7 @@ let guessTheFake_MatchInit: nkruntime.MatchInitFunction<guessTheFake_State> =
       joinCode: Number(params['joinCode']),
     };
 
-    let state: guessTheFake_State = {
+    let state: State = {
       label: label,
       emptyTicks: 0,
       presences: {},
@@ -35,66 +34,65 @@ let guessTheFake_MatchInit: nkruntime.MatchInitFunction<guessTheFake_State> =
       ticksShowingAnswer: 0,
     };
 
-    state.questions = guessTheFake_BuildImgArray();
+    state.questions = BuildImgArray();
 
     return {
       state,
-      tickRate: guessTheFake_Tickrate,
+      tickRate: Tickrate,
       label: JSON.stringify(label),
     };
   };
 
-let guessTheFake_MatchJoinAttempt: nkruntime.MatchJoinAttemptFunction<guessTheFake_State> =
-  function (
-    ctx: nkruntime.Context,
-    logger: nkruntime.Logger,
-    nk: nkruntime.Nakama,
-    dispatcher: nkruntime.MatchDispatcher,
-    tick: number,
-    state: guessTheFake_State,
-    presence: nkruntime.Presence,
-    metadata: { [key: string]: any }
-  ) {
-    // Check if it's a user attempting to rejoin after a disconnect.
-    if (presence.userId in state.presences) {
-      if (state.presences[presence.userId] === null) {
-        // User rejoining after a disconnect.
-        return {
-          state: state,
-          accept: true,
-        };
-      } else {
-        // User attempting to join from 2 different devices at the same time.
+  export let MatchJoinAttempt: nkruntime.MatchJoinAttemptFunction<State> =
+    function (
+      ctx: nkruntime.Context,
+      logger: nkruntime.Logger,
+      nk: nkruntime.Nakama,
+      dispatcher: nkruntime.MatchDispatcher,
+      tick: number,
+      state: State,
+      presence: nkruntime.Presence,
+      metadata: { [key: string]: any }
+    ) {
+      // Check if it's a user attempting to rejoin after a disconnect.
+      if (presence.userId in state.presences) {
+        if (state.presences[presence.userId] === null) {
+          // User rejoining after a disconnect.
+          return {
+            state: state,
+            accept: true,
+          };
+        } else {
+          // User attempting to join from 2 different devices at the same time.
+          return {
+            state: state,
+            accept: false,
+            rejectMessage: 'already joined',
+          };
+        }
+      } else if (state.playing) {
         return {
           state: state,
           accept: false,
-          rejectMessage: 'already joined',
+          rejectMessage: 'In Game',
         };
       }
-    } else if (state.playing) {
+
+      // New player attempting to connect.
+      state.joinsInProgress++;
       return {
-        state: state,
-        accept: false,
-        rejectMessage: 'In Game',
+        state,
+        accept: true,
       };
-    }
-
-    // New player attempting to connect.
-    state.joinsInProgress++;
-    return {
-      state,
-      accept: true,
     };
-  };
 
-let guessTheFake_MatchJoin: nkruntime.MatchJoinFunction<guessTheFake_State> =
-  function (
+  export let MatchJoin: nkruntime.MatchJoinFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: guessTheFake_State,
+    state: State,
     presences: nkruntime.Presence[]
   ) {
     for (const presence of presences) {
@@ -108,36 +106,29 @@ let guessTheFake_MatchJoin: nkruntime.MatchJoinFunction<guessTheFake_State> =
         state.matchHost = presence.userId;
       }
 
-      let update: guessTheFake_PlayerListMessage = {
+      let update: PlayerListMessage = {
         presences: state.presences,
         host: state.matchHost,
         isPresenter: state.hostAsPresenter,
       };
       // Send a message to the user that just joined.
-      dispatcher.broadcastMessage(
-        guessTheFake_OpCode.PLAYERLIST,
-        JSON.stringify(update)
-      );
+      dispatcher.broadcastMessage(OpCode.PLAYERLIST, JSON.stringify(update));
 
       // Check if we must send a message to this user to update them on the current game state.
       if (state.playing) {
         // There's a game still currently in progress, the player is re-joining after a disconnect. Give them a state update.
-        let update: guessTheFake_ImgMessage = {
+        let update: ImgMessage = {
           images: state.questions[state.currentQuestion].images,
         };
 
-        dispatcher.broadcastMessage(
-          guessTheFake_OpCode.UPDATE,
-          JSON.stringify(update),
-          [presence]
-        );
+        dispatcher.broadcastMessage(OpCode.UPDATE, JSON.stringify(update), [
+          presence,
+        ]);
 
         if (state.ticksUntilNextQuestion < 1) {
-          dispatcher.broadcastMessage(
-            guessTheFake_OpCode.DONE,
-            JSON.stringify({}),
-            [presence]
-          );
+          dispatcher.broadcastMessage(OpCode.DONE, JSON.stringify({}), [
+            presence,
+          ]);
         }
       } else {
         logger.debug('player %s rejoined game', presence.userId);
@@ -147,14 +138,13 @@ let guessTheFake_MatchJoin: nkruntime.MatchJoinFunction<guessTheFake_State> =
     return { state };
   };
 
-let guessTheFake_MatchLeave: nkruntime.MatchLeaveFunction<guessTheFake_State> =
-  function (
+  export let MatchLeave: nkruntime.MatchLeaveFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: guessTheFake_State,
+    state: State,
     presences: nkruntime.Presence[]
   ) {
     for (let presence of presences) {
@@ -162,40 +152,33 @@ let guessTheFake_MatchLeave: nkruntime.MatchLeaveFunction<guessTheFake_State> =
       state.presences[presence.userId] = null;
 
       if (presence.userId == state.matchHost && !state.playing) {
-        dispatcher.broadcastMessage(
-          guessTheFake_OpCode.LEAVE,
-          JSON.stringify({})
-        );
+        dispatcher.broadcastMessage(OpCode.LEAVE, JSON.stringify({}));
         return null;
       }
     }
 
-    let msg: guessTheFake_PlayerListMessage = {
+    let msg: PlayerListMessage = {
       presences: state.presences,
       host: state.matchHost,
       isPresenter: state.hostAsPresenter,
     };
-    dispatcher.broadcastMessage(
-      guessTheFake_OpCode.PLAYERLIST,
-      JSON.stringify(msg)
-    );
+    dispatcher.broadcastMessage(OpCode.PLAYERLIST, JSON.stringify(msg));
 
     return { state };
   };
 
-let guessTheFake_MatchLoop: nkruntime.MatchLoopFunction<guessTheFake_State> =
-  function (
+  export let MatchLoop: nkruntime.MatchLoopFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: guessTheFake_State,
+    state: State,
     messages: nkruntime.MatchMessage[]
   ) {
-    if (guessTheFake_connectedPlayers(state) + state.joinsInProgress === 0) {
+    if (connectedPlayers(state) + state.joinsInProgress === 0) {
       state.emptyTicks++;
-      if (state.emptyTicks >= guessTheFake_MaxEmptyTicks) {
+      if (state.emptyTicks >= MaxEmptyTicks) {
         // Match has been empty for too long, close it.
         logger.info('closing idle match');
         return null;
@@ -228,7 +211,7 @@ let guessTheFake_MatchLoop: nkruntime.MatchLoopFunction<guessTheFake_State> =
 
       for (const message of messages) {
         switch (message.opCode) {
-          case guessTheFake_OpCode.START:
+          case OpCode.START:
             if (message.sender.userId == state.matchHost) {
               state.playing = true;
 
@@ -253,35 +236,27 @@ let guessTheFake_MatchLoop: nkruntime.MatchLoopFunction<guessTheFake_State> =
 
     state.ticksUntilNextQuestion--;
 
-    let timer: guessTheFake_TimerMessage = {
-      secondsLeft: Math.ceil(
-        state.ticksUntilNextQuestion / guessTheFake_Tickrate
-      ),
+    let timer: TimerMessage = {
+      secondsLeft: Math.ceil(state.ticksUntilNextQuestion / Tickrate),
       timerName: 'Zeit zum Antworten: ',
     };
 
     if (
       state.countAnswers >=
-      guessTheFake_connectedPlayers(state) - (state.hostAsPresenter ? 1 : 0)
+      connectedPlayers(state) - (state.hostAsPresenter ? 1 : 0)
     ) {
       state.ticksUntilNextQuestion = 0;
     }
 
     if (state.ticksUntilNextQuestion < 1) {
-      if (state.ticksShowingAnswer >= guessTheFake_TicksShowingAnswer) {
-        dispatcher.broadcastMessage(
-          guessTheFake_OpCode.DONE,
-          JSON.stringify({})
-        );
+      if (state.ticksShowingAnswer >= TicksShowingAnswer) {
+        dispatcher.broadcastMessage(OpCode.DONE, JSON.stringify({}));
 
-        let update: guessTheFake_AnswerMessage = {
+        let update: AnswerMessage = {
           answer: state.questions[state.currentQuestion].answer,
         };
 
-        dispatcher.broadcastMessage(
-          guessTheFake_OpCode.ANSWER,
-          JSON.stringify(update)
-        );
+        dispatcher.broadcastMessage(OpCode.ANSWER, JSON.stringify(update));
 
         if (state.hostAsPresenter) {
           state.ticksShowingAnswer = 1;
@@ -295,9 +270,7 @@ let guessTheFake_MatchLoop: nkruntime.MatchLoopFunction<guessTheFake_State> =
 
       if (!state.hostAsPresenter) {
         timer = {
-          secondsLeft: Math.ceil(
-            state.ticksShowingAnswer / guessTheFake_Tickrate
-          ),
+          secondsLeft: Math.ceil(state.ticksShowingAnswer / Tickrate),
           timerName: 'Nächste Frage in: ',
         };
         state.ticksShowingAnswer--;
@@ -306,8 +279,8 @@ let guessTheFake_MatchLoop: nkruntime.MatchLoopFunction<guessTheFake_State> =
       if (state.ticksShowingAnswer < 1) {
         state.countAnswers = 0;
 
-        state.ticksUntilNextQuestion = guessTheFake_MaxTicksUntilNext;
-        state.ticksShowingAnswer = guessTheFake_TicksShowingAnswer;
+        state.ticksUntilNextQuestion = MaxTicksUntilNext;
+        state.ticksShowingAnswer = TicksShowingAnswer;
 
         state.currentQuestion++;
 
@@ -344,45 +317,36 @@ let guessTheFake_MatchLoop: nkruntime.MatchLoopFunction<guessTheFake_State> =
             );
           }
 
-          let scoreboard: guessTheFake_ResultMessage = {
+          let scoreboard: ResultMessage = {
             results: renderScoreboard,
           };
 
-          dispatcher.broadcastMessage(
-            guessTheFake_OpCode.END,
-            JSON.stringify(scoreboard)
-          );
+          dispatcher.broadcastMessage(OpCode.END, JSON.stringify(scoreboard));
 
-          state.questions = guessTheFake_BuildImgArray();
+          state.questions = BuildImgArray();
 
           state.playing = false;
 
           return { state };
         }
 
-        let update: guessTheFake_ImgMessage = {
+        let update: ImgMessage = {
           images: state.questions[state.currentQuestion].images,
         };
 
-        dispatcher.broadcastMessage(
-          guessTheFake_OpCode.UPDATE,
-          JSON.stringify(update)
-        );
+        dispatcher.broadcastMessage(OpCode.UPDATE, JSON.stringify(update));
       }
     }
 
-    dispatcher.broadcastMessage(
-      guessTheFake_OpCode.TIMER,
-      JSON.stringify(timer)
-    );
+    dispatcher.broadcastMessage(OpCode.TIMER, JSON.stringify(timer));
 
     // There's a game in progresstate. Check for input, update match state, and send messages to clientstate.
     for (const message of messages) {
       switch (message.opCode) {
-        case guessTheFake_OpCode.ANSWER:
+        case OpCode.ANSWER:
           let playerMsg = JSON.parse(
             nk.binaryToString(message.data)
-          ) as guessTheFake_AnswerMessage;
+          ) as AnswerMessage;
 
           state.countAnswers++;
 
@@ -393,18 +357,18 @@ let guessTheFake_MatchLoop: nkruntime.MatchLoopFunction<guessTheFake_State> =
             state.scoreboard[message.sender.userId]++;
           }
 
-          let update: guessTheFake_StateMessage = {
+          let update: StateMessage = {
             state: true,
           };
 
           dispatcher.broadcastMessage(
-            guessTheFake_OpCode.CONFIRMED,
+            OpCode.CONFIRMED,
             JSON.stringify(update),
             [message.sender]
           );
           break;
 
-        case guessTheFake_OpCode.START:
+        case OpCode.START:
           if (
             message.sender.userId == state.matchHost &&
             state.hostAsPresenter &&
@@ -416,9 +380,7 @@ let guessTheFake_MatchLoop: nkruntime.MatchLoopFunction<guessTheFake_State> =
 
         default:
           // No other opcodes are expected from the client, so automatically treat it as an error.
-          dispatcher.broadcastMessage(guessTheFake_OpCode.REJECTED, null, [
-            message.sender,
-          ]);
+          dispatcher.broadcastMessage(OpCode.REJECTED, null, [message.sender]);
           logger.error('Unexpected opcode received: %d', message.opCode);
       }
     }
@@ -426,27 +388,27 @@ let guessTheFake_MatchLoop: nkruntime.MatchLoopFunction<guessTheFake_State> =
     return { state };
   };
 
-let guessTheFake_MatchTerminate: nkruntime.MatchTerminateFunction<guessTheFake_State> =
-  function (
-    ctx: nkruntime.Context,
-    logger: nkruntime.Logger,
-    nk: nkruntime.Nakama,
-    dispatcher: nkruntime.MatchDispatcher,
-    tick: number,
-    state: guessTheFake_State,
-    graceSeconds: number
-  ) {
-    return { state };
-  };
+  export let MatchTerminate: nkruntime.MatchTerminateFunction<State> =
+    function (
+      ctx: nkruntime.Context,
+      logger: nkruntime.Logger,
+      nk: nkruntime.Nakama,
+      dispatcher: nkruntime.MatchDispatcher,
+      tick: number,
+      state: State,
+      graceSeconds: number
+    ) {
+      return { state };
+    };
 
-let guessTheFake_MatchSignal: nkruntime.MatchSignalFunction<guessTheFake_State> =
-  function (
+  export let MatchSignal: nkruntime.MatchSignalFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: guessTheFake_State
+    state: State
   ) {
     return { state };
   };
+}

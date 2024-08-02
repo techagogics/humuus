@@ -25,33 +25,33 @@ function InitModule(
   initializer.registerRpc('Get_Join_Code_Length', rpcGetJoinCodeLength);
 
   initializer.registerMatch(GAMETYPE_sharedTextInput, {
-    matchInit: sharedTextInput_MatchInit,
-    matchJoinAttempt: sharedTextInput_MatchJoinAttempt,
-    matchJoin: sharedTextInput_MatchJoin,
-    matchLeave: sharedTextInput_MatchLeave,
-    matchLoop: sharedTextInput_MatchLoop,
-    matchSignal: sharedTextInput_MatchSignal,
-    matchTerminate: sharedTextInput_MatchTerminate,
+    matchInit: sharedTextInput.MatchInit,
+    matchJoinAttempt: sharedTextInput.MatchJoinAttempt,
+    matchJoin: sharedTextInput.MatchJoin,
+    matchLeave: sharedTextInput.MatchLeave,
+    matchLoop: sharedTextInput.MatchLoop,
+    matchSignal: sharedTextInput.MatchSignal,
+    matchTerminate: sharedTextInput.MatchTerminate,
   });
 
   initializer.registerMatch(GAMETYPE_defaultQuiz, {
-    matchInit: defaultQuiz_MatchInit,
-    matchJoinAttempt: defaultQuiz_MatchJoinAttempt,
-    matchJoin: defaultQuiz_MatchJoin,
-    matchLeave: defaultQuiz_MatchLeave,
-    matchLoop: defaultQuiz_MatchLoop,
-    matchSignal: defaultQuiz_MatchSignal,
-    matchTerminate: defaultQuiz_MatchTerminate,
+    matchInit: defaultQuiz.MatchInit,
+    matchJoinAttempt: defaultQuiz.MatchJoinAttempt,
+    matchJoin: defaultQuiz.MatchJoin,
+    matchLeave: defaultQuiz.MatchLeave,
+    matchLoop: defaultQuiz.MatchLoop,
+    matchSignal: defaultQuiz.MatchSignal,
+    matchTerminate: defaultQuiz.MatchTerminate,
   });
 
   initializer.registerMatch(GAMETYPE_guessTheFake, {
-    matchInit: guessTheFake_MatchInit,
-    matchJoinAttempt: guessTheFake_MatchJoinAttempt,
-    matchJoin: guessTheFake_MatchJoin,
-    matchLeave: guessTheFake_MatchLeave,
-    matchLoop: guessTheFake_MatchLoop,
-    matchSignal: guessTheFake_MatchSignal,
-    matchTerminate: guessTheFake_MatchTerminate,
+    matchInit: guessTheFake.MatchInit,
+    matchJoinAttempt: guessTheFake.MatchJoinAttempt,
+    matchJoin: guessTheFake.MatchJoin,
+    matchLeave: guessTheFake.MatchLeave,
+    matchLoop: guessTheFake.MatchLoop,
+    matchSignal: guessTheFake.MatchSignal,
+    matchTerminate: guessTheFake.MatchTerminate,
   });
 
   initializer.registerMatch(GAMETYPE_dataDecorator, {

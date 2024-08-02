@@ -1,9 +1,8 @@
-const sharedTextInput_Tickrate = 20;
-const sharedTextInput_MaxEmptyTicks =
-  MAX_TIME_WITHOUT_PLAYERS_IN_SEC * sharedTextInput_Tickrate;
+namespace sharedTextInput {
+  const Tickrate = 20;
+  const MaxEmptyTicks = MAX_TIME_WITHOUT_PLAYERS_IN_SEC * Tickrate;
 
-let sharedTextInput_MatchInit: nkruntime.MatchInitFunction<sharedTextInput_State> =
-  function (
+  export let MatchInit: nkruntime.MatchInitFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
@@ -15,7 +14,7 @@ let sharedTextInput_MatchInit: nkruntime.MatchInitFunction<sharedTextInput_State
       joinCode: Number(params['joinCode']),
     };
 
-    let state: sharedTextInput_State = {
+    let state: State = {
       label: label,
       emptyTicks: 0,
       presences: {},
@@ -27,42 +26,42 @@ let sharedTextInput_MatchInit: nkruntime.MatchInitFunction<sharedTextInput_State
 
     return {
       state,
-      tickRate: sharedTextInput_Tickrate,
+      tickRate: Tickrate,
       label: JSON.stringify(label),
     };
   };
 
-let sharedTextInput_MatchJoinAttempt: nkruntime.MatchJoinAttemptFunction<sharedTextInput_State> =
-  function (
-    ctx: nkruntime.Context,
-    logger: nkruntime.Logger,
-    nk: nkruntime.Nakama,
-    dispatcher: nkruntime.MatchDispatcher,
-    tick: number,
-    state: sharedTextInput_State,
-    presence: nkruntime.Presence,
-    metadata: { [key: string]: any }
-  ) {
-    // Check if it's a user attempting to rejoin after a disconnect.
-    if (presence.userId in state.presences) {
-      if (state.presences[presence.userId] === null) {
-        // User rejoining after a disconnect.
-        return {
-          state: state,
-          accept: true,
-        };
-      } else {
-        // User attempting to join from 2 different devices at the same time.
-        return {
-          state: state,
-          accept: false,
-          rejectMessage: 'already joined',
-        };
+  export let MatchJoinAttempt: nkruntime.MatchJoinAttemptFunction<State> =
+    function (
+      ctx: nkruntime.Context,
+      logger: nkruntime.Logger,
+      nk: nkruntime.Nakama,
+      dispatcher: nkruntime.MatchDispatcher,
+      tick: number,
+      state: State,
+      presence: nkruntime.Presence,
+      metadata: { [key: string]: any }
+    ) {
+      // Check if it's a user attempting to rejoin after a disconnect.
+      if (presence.userId in state.presences) {
+        if (state.presences[presence.userId] === null) {
+          // User rejoining after a disconnect.
+          return {
+            state: state,
+            accept: true,
+          };
+        } else {
+          // User attempting to join from 2 different devices at the same time.
+          return {
+            state: state,
+            accept: false,
+            rejectMessage: 'already joined',
+          };
+        }
       }
-    }
 
-    // Check if match is full.
-    /*
+      // Check if match is full.
+      /*
   if (connectedPlayers(state) >= maxPlayers) {
     return {
       state: state,
@@ -71,22 +70,21 @@ let sharedTextInput_MatchJoinAttempt: nkruntime.MatchJoinAttemptFunction<sharedT
     };
   }*/
 
-    // New player attempting to connect.
-    state.joinsInProgress++;
-    return {
-      state,
-      accept: true,
+      // New player attempting to connect.
+      state.joinsInProgress++;
+      return {
+        state,
+        accept: true,
+      };
     };
-  };
 
-let sharedTextInput_MatchJoin: nkruntime.MatchJoinFunction<sharedTextInput_State> =
-  function (
+  export let MatchJoin: nkruntime.MatchJoinFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: sharedTextInput_State,
+    state: State,
     presences: nkruntime.Presence[]
   ) {
     const t = msecToSec(Date.now());
@@ -101,18 +99,13 @@ let sharedTextInput_MatchJoin: nkruntime.MatchJoinFunction<sharedTextInput_State
       // Check if we must send a message to this user to update them on the current game state.
       if (state.playing) {
         // There's a game still currently in progress, the player is re-joining after a disconnect. Give them a state update.
-        let update: sharedTextInput_UpdateMessage = {
+        let update: UpdateMessage = {
           presences: state.presences,
           value: state.inputValue,
-          deadline:
-            t +
-            Math.floor(state.deadlineRemainingTicks / sharedTextInput_Tickrate),
+          deadline: t + Math.floor(state.deadlineRemainingTicks / Tickrate),
         };
         // Send a message to the user that just joined.
-        dispatcher.broadcastMessage(
-          sharedTextInput_OpCode.UPDATE,
-          JSON.stringify(update)
-        );
+        dispatcher.broadcastMessage(OpCode.UPDATE, JSON.stringify(update));
       } else {
         logger.debug('player %s rejoined game', presence.userId);
       }
@@ -132,14 +125,13 @@ let sharedTextInput_MatchJoin: nkruntime.MatchJoinFunction<sharedTextInput_State
     return { state };
   };
 
-let sharedTextInput_MatchLeave: nkruntime.MatchLeaveFunction<sharedTextInput_State> =
-  function (
+  export let MatchLeave: nkruntime.MatchLeaveFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: sharedTextInput_State,
+    state: State,
     presences: nkruntime.Presence[]
   ) {
     /*
@@ -153,36 +145,30 @@ let sharedTextInput_MatchLeave: nkruntime.MatchLeaveFunction<sharedTextInput_Sta
       delete state.presences[presence.userId];
     }
 
-    let msg: sharedTextInput_UpdateMessage = {
+    let msg: UpdateMessage = {
       presences: state.presences,
       value: state.inputValue,
-      deadline: Math.floor(
-        state.deadlineRemainingTicks / sharedTextInput_Tickrate
-      ),
+      deadline: Math.floor(state.deadlineRemainingTicks / Tickrate),
     };
-    dispatcher.broadcastMessage(
-      sharedTextInput_OpCode.UPDATE,
-      JSON.stringify(msg)
-    );
+    dispatcher.broadcastMessage(OpCode.UPDATE, JSON.stringify(msg));
 
     return { state };
   };
 
-let sharedTextInput_MatchLoop: nkruntime.MatchLoopFunction<sharedTextInput_State> =
-  function (
+  export let MatchLoop: nkruntime.MatchLoopFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: sharedTextInput_State,
+    state: State,
     messages: nkruntime.MatchMessage[]
   ) {
     //logger.debug('Running match loop. Tick: %d', tick);
 
-    if (sharedTextInput_connectedPlayers(state) + state.joinsInProgress === 0) {
+    if (connectedPlayers(state) + state.joinsInProgress === 0) {
       state.emptyTicks++;
-      if (state.emptyTicks >= sharedTextInput_MaxEmptyTicks) {
+      if (state.emptyTicks >= MaxEmptyTicks) {
         // Match has been empty for too long, close it.
         logger.info('closing idle match');
         return null;
@@ -214,17 +200,12 @@ let sharedTextInput_MatchLoop: nkruntime.MatchLoopFunction<sharedTextInput_State
       //state.inputValue = 'new Array(9)';
 
       // Notify the players a new game has started.
-      let msg: sharedTextInput_StartMessage = {
+      let msg: StartMessage = {
         presences: state.presences,
         value: state.inputValue,
-        deadline:
-          t +
-          Math.floor(state.deadlineRemainingTicks / sharedTextInput_Tickrate),
+        deadline: t + Math.floor(state.deadlineRemainingTicks / Tickrate),
       };
-      dispatcher.broadcastMessage(
-        sharedTextInput_OpCode.START,
-        JSON.stringify(msg)
-      );
+      dispatcher.broadcastMessage(OpCode.START, JSON.stringify(msg));
 
       return { state };
     }
@@ -232,15 +213,15 @@ let sharedTextInput_MatchLoop: nkruntime.MatchLoopFunction<sharedTextInput_State
     // There's a game in progresstate. Check for input, update match state, and send messages to clientstate.
     for (const message of messages) {
       switch (message.opCode) {
-        case sharedTextInput_OpCode.MOVE:
+        case OpCode.MOVE:
           logger.debug('Received move message from user: %v');
 
-          let playerMsg = {} as sharedTextInput_PlayerUpdateMessage;
+          let playerMsg = {} as PlayerUpdateMessage;
           try {
             playerMsg = JSON.parse(nk.binaryToString(message.data));
           } catch (error) {
             // Client sent bad data.
-            dispatcher.broadcastMessage(sharedTextInput_OpCode.REJECTED, null, [
+            dispatcher.broadcastMessage(OpCode.REJECTED, null, [
               message.sender,
             ]);
             logger.debug('Bad data received: %v', error);
@@ -250,26 +231,20 @@ let sharedTextInput_MatchLoop: nkruntime.MatchLoopFunction<sharedTextInput_State
           // Update the game state.
           state.inputValue = playerMsg.value;
 
-          let opCode: sharedTextInput_OpCode;
-          let outgoingMsg: sharedTextInput_Message;
-          opCode = sharedTextInput_OpCode.UPDATE;
-          let msg: sharedTextInput_UpdateMessage = {
+          let opCode: OpCode;
+          let outgoingMsg: Message;
+          opCode = OpCode.UPDATE;
+          let msg: UpdateMessage = {
             presences: state.presences,
             value: state.inputValue,
-            deadline:
-              t +
-              Math.floor(
-                state.deadlineRemainingTicks / sharedTextInput_Tickrate
-              ),
+            deadline: t + Math.floor(state.deadlineRemainingTicks / Tickrate),
           };
           outgoingMsg = msg;
           dispatcher.broadcastMessage(opCode, JSON.stringify(outgoingMsg));
           break;
         default:
           // No other opcodes are expected from the client, so automatically treat it as an error.
-          dispatcher.broadcastMessage(sharedTextInput_OpCode.REJECTED, null, [
-            message.sender,
-          ]);
+          dispatcher.broadcastMessage(OpCode.REJECTED, null, [message.sender]);
           logger.error('Unexpected opcode received: %d', message.opCode);
       }
     }
@@ -277,27 +252,27 @@ let sharedTextInput_MatchLoop: nkruntime.MatchLoopFunction<sharedTextInput_State
     return { state };
   };
 
-let sharedTextInput_MatchTerminate: nkruntime.MatchTerminateFunction<sharedTextInput_State> =
-  function (
-    ctx: nkruntime.Context,
-    logger: nkruntime.Logger,
-    nk: nkruntime.Nakama,
-    dispatcher: nkruntime.MatchDispatcher,
-    tick: number,
-    state: sharedTextInput_State,
-    graceSeconds: number
-  ) {
-    return { state };
-  };
+  export let MatchTerminate: nkruntime.MatchTerminateFunction<State> =
+    function (
+      ctx: nkruntime.Context,
+      logger: nkruntime.Logger,
+      nk: nkruntime.Nakama,
+      dispatcher: nkruntime.MatchDispatcher,
+      tick: number,
+      state: State,
+      graceSeconds: number
+    ) {
+      return { state };
+    };
 
-let sharedTextInput_MatchSignal: nkruntime.MatchSignalFunction<sharedTextInput_State> =
-  function (
+  export let MatchSignal: nkruntime.MatchSignalFunction<State> = function (
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     dispatcher: nkruntime.MatchDispatcher,
     tick: number,
-    state: sharedTextInput_State
+    state: State
   ) {
     return { state };
   };
+}
