@@ -1,5 +1,4 @@
 // ---------------------------- State ---------------------------- //
-
 interface dataDecorator_State {
   // Match label
   label: MatchLabel;
@@ -11,7 +10,12 @@ interface dataDecorator_State {
   owner: string;
   // True if there's a game currently in progress.
   playing: boolean;
+  // Stores the votes for companys.
   companyVotes: { [userId: string]: number };
+  // How long each round should last.
+  roundLength: number;
+  // Stores data of the current round.
+  roundState: dataDecorator_RoundState;
 }
 
 enum dataDecorator_OpCodes {
@@ -37,6 +41,12 @@ enum dataDecorator_OpCodes {
   StartRound = 9,
   // When the minigame is supposed to be started.
   StartMinigame = 10,
+  // When the round ended and players are supposed to send their score.
+  RoundEnded = 11,
+  // When a player reached the target in the minigame.
+  TargetReached = 12,
+  // A new player round result was recieved by the server.
+  PlayerRoundResult = 13,
 }
 
 interface dataDecorator_UserState {
@@ -44,5 +54,14 @@ interface dataDecorator_UserState {
   Username: string;
   Ready: boolean;
   Position: number;
+  Score: number;
   presence: nkruntime.Presence;
+}
+
+interface dataDecorator_RoundState {
+  // True if players are playing a minigame.
+  inMinigame: boolean;
+  Round: number;
+  TimeLeft: number;
+  PlayersReachedTarget: string[];
 }

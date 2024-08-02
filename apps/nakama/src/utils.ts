@@ -13,3 +13,7 @@ function size(obj: object) {
 function getRandomInt(max: number) {
   return Math.floor(Math.random() * max);
 }
+
+function clamp(number: number, min: number, max: number) {
+  return Math.max(min, Math.min(number, max));
+}
