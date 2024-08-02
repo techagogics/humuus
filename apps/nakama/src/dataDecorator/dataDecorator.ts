@@ -1,6 +1,7 @@
 const dataDecorator_Tickrate = 10;
 const dataDecorator_MaxEmptyTicks =
   MAX_TIME_WITHOUT_PLAYERS_IN_SEC * dataDecorator_Tickrate;
+const dataDecorator_DefaultRoundLength = 10;
 
 let dataDecorator_MatchInit: nkruntime.MatchInitFunction<dataDecorator_State> =
   function (
@@ -24,6 +25,13 @@ let dataDecorator_MatchInit: nkruntime.MatchInitFunction<dataDecorator_State> =
       playing: false,
       playerStates: {},
       companyVotes: {},
+      roundLength: dataDecorator_DefaultRoundLength,
+      roundState: {
+        Round: 0,
+        TimeLeft: 0,
+        PlayersReachedTarget: [],
+        inMinigame: false,
+      },
     };
 
     return {
@@ -67,6 +75,7 @@ let dataDecorator_MatchJoin: nkruntime.MatchJoinFunction<dataDecorator_State> =
         Username: presence.username,
         Position: Object.keys(state.playerStates).length,
         Ready: false,
+        Score: 0,
         presence: presence,
       };
       state.playerStates[presence.userId] = playerState;
@@ -165,6 +174,19 @@ let dataDecorator_MatchLoop: nkruntime.MatchLoopFunction<dataDecorator_State> =
         case dataDecorator_OpCodes.StartMinigame:
           dataDecorator_StartMinigame(dispatcher, logger, state, message, nk);
           break;
+        case dataDecorator_OpCodes.TargetReached: {
+          state.roundState.PlayersReachedTarget.push(message.sender.userId);
+          break;
+        }
+        case dataDecorator_OpCodes.RoundEnded:
+          dataDecorator_UpdatePlayerScore(
+            dispatcher,
+            logger,
+            state,
+            message,
+            nk
+          );
+          break;
         default:
           dispatcher.broadcastMessage(
             message.opCode,
@@ -174,6 +196,8 @@ let dataDecorator_MatchLoop: nkruntime.MatchLoopFunction<dataDecorator_State> =
           );
       }
     });
+
+    dataDecorator_RoundLoop(dispatcher, logger, state, nk);
 
     if (state.owner == '') {
       dataDecorator_closeMatch(dispatcher, logger, state);
@@ -235,49 +259,6 @@ function dataDecorator_closeMatch(
     null
   );
 }
-/* Old Match starting code
-function dataDecorator_startMatch(
-  dispatcher: nkruntime.MatchDispatcher,
-  logger: nkruntime.Logger,
-  state: dataDecorator_State,
-  message: nkruntime.MatchMessage,
-  nk: nkruntime.Nakama
-) {
-  if (message.sender.userId != state.owner) {
-    return;
-  }
-
-  logger.info('Minigame message: ' + nk.binaryToString(message.data));
-  const minigames: string[] = JSON.parse(nk.binaryToString(message.data));
-  var usedMinigames = minigames;
-
-  const allReady = Object.keys(state.playerStates).every(
-    (userId) => state.playerStates[userId].Ready
-  );
-  if (!allReady) {
-    return;
-  }
-
-  Object.keys(state.playerStates).forEach(function (userId) {
-    const playerState = state.playerStates[userId];
-    const miniGameIndex = (Math.random() * usedMinigames.length) | 0;
-    var minigame = usedMinigames[miniGameIndex];
-    delete usedMinigames[miniGameIndex];
-    if (usedMinigames.length == 0) {
-      usedMinigames = minigames;
-    }
-    dispatcher.broadcastMessage(
-      dataDecorator_OpCodes.StartMatch,
-      minigame,
-      [playerState.presence],
-      null
-    );
-  });
-  state.playing = true;
-  state.label.open = 0;
-
-  logger.info(`Match started of type: ${state.label.matchType}`);
-}*/
 
 function dataDecorator_startMatch(
   dispatcher: nkruntime.MatchDispatcher,
@@ -426,5 +407,63 @@ function dataDecorator_StartMinigame(
       null
     );
   });
+  state.roundState.TimeLeft = state.roundLength;
+  state.roundState.inMinigame = true;
+
   logger.info(`Minigame started of type: ${state.label.matchType}`);
+}
+
+function dataDecorator_UpdatePlayerScore(
+  dispatcher: nkruntime.MatchDispatcher,
+  logger: nkruntime.Logger,
+  state: dataDecorator_State,
+  message: nkruntime.MatchMessage,
+  nk: nkruntime.Nakama
+) {
+  state.playerStates[message.sender.userId].Score += clamp(
+    JSON.parse(nk.binaryToString(message.data)),
+    0,
+    3000
+  );
+  dispatcher.broadcastMessage(
+    dataDecorator_OpCodes.PlayerRoundResult,
+    state.playerStates[message.sender.userId].Score.toString(),
+    null,
+    message.sender
+  );
+}
+
+// Update round state.
+function dataDecorator_RoundLoop(
+  dispatcher: nkruntime.MatchDispatcher,
+  logger: nkruntime.Logger,
+  state: dataDecorator_State,
+  nk: nkruntime.Nakama
+) {
+  if (!state.roundState.inMinigame) {
+    return;
+  }
+
+  state.roundState.TimeLeft -= 1 / dataDecorator_Tickrate;
+
+  // If time elapsed or all players reached target end round.
+  if (
+    state.roundState.TimeLeft <= 0 ||
+    state.roundState.PlayersReachedTarget.length >=
+      Object.keys(state.playerStates).length
+  ) {
+    dataDecorator_EndRound(dispatcher, logger, state, nk);
+  }
+}
+
+// Update round state.
+function dataDecorator_EndRound(
+  dispatcher: nkruntime.MatchDispatcher,
+  logger: nkruntime.Logger,
+  state: dataDecorator_State,
+  nk: nkruntime.Nakama
+) {
+  state.roundState.inMinigame = false;
+  state.roundState.PlayersReachedTarget = [];
+  dispatcher.broadcastMessage(dataDecorator_OpCodes.RoundEnded, '', null, null);
 }
