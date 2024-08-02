@@ -1,3 +1,6 @@
 {
-  "extends": ["@humuus/eslint-config/next.js"]
+  "extends": [
+    "@humuus/eslint-config/next.js",
+    "plugin:storybook/recommended"
+  ]
 }

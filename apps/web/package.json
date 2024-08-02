@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --check --ignore-path .gitignore .",
-    "format:fix": "prettier --write --ignore-path .gitignore ."
+    "format:fix": "prettier --write --ignore-path .gitignore .",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@heroiclabs/nakama-js": "^2.8.0",
@@ -27,17 +29,28 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "1.6.1",
+    "@humuus/eslint-config": "workspace:*",
+    "@humuus/typescript-config": "workspace:*",
+    "@storybook/addon-essentials": "^8.2.7",
+    "@storybook/addon-interactions": "^8.2.7",
+    "@storybook/addon-links": "^8.2.7",
+    "@storybook/addon-onboarding": "^8.2.7",
+    "@storybook/blocks": "^8.2.7",
+    "@storybook/nextjs": "^8.2.7",
+    "@storybook/react": "^8.2.7",
+    "@storybook/test": "^8.2.7",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.4",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-storybook": "^0.8.0",
     "postcss": "^8",
     "prettier": "^3.3.2",
+    "storybook": "^8.2.7",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5",
-    "@humuus/typescript-config": "workspace:*",
-    "@humuus/eslint-config": "workspace:*"
+    "typescript": "^5"
   }
 }
