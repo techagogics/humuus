@@ -16,6 +16,8 @@ function InitModule(
 
   initializer.registerRpc('healthcheck', rpcHealthcheck);
 
+  initializer.registerRpc('Storage_API', rpcStorageAPI);
+
   initializer.registerRpc('Create_Match', rpcCreateMatch);
 
   initializer.registerRpc('Find_Match_By_Join_Code', rpcFindMatchByJoinCode);

@@ -104,17 +104,18 @@ function guessTheFake_connectedPlayers(s: guessTheFake_State): number {
   return count;
 }
 
-function guessTheFake_BuildImgArray(): Array<guessTheFake_ImgAndAnswer> {
+function guessTheFake_BuildImgArray(
+  fakeArray: Array<string>,
+  realArray: Array<string>
+): Array<guessTheFake_ImgAndAnswer> {
   let tempArray: Array<guessTheFake_ImgAndAnswer> = [];
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     let temp: guessTheFake_ImgAndAnswer = { images: [], answer: -1 };
 
-    let randomFake =
-      guessTheFake_FakeArray[getRandomInt(guessTheFake_FakeArray.length)];
+    let randomFake = fakeArray[getRandomInt(fakeArray.length)];
 
-    let randomReal =
-      guessTheFake_RealArray[getRandomInt(guessTheFake_RealArray.length)];
+    let randomReal = realArray[getRandomInt(realArray.length)];
 
     let randomIndex = getRandomInt(2);
 

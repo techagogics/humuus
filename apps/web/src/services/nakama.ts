@@ -256,6 +256,26 @@ export default class Nakama {
     return payload.matchId;
   }
 
+  async writeDataToStorage(key: string, data: Array<any>): Promise<void> {
+    if (!this.session || !this.socket) {
+      console.error('Session or socket not found!');
+      return;
+    }
+
+    enum API {
+      WRITE = 0,
+      DELETE = 1,
+      GET = 2,
+    }
+
+    const newMatch = await this.client.rpc(this.session, 'Storage_API', {
+      operation: API.WRITE,
+      collection: 'workshops',
+      key: key,
+      data: data,
+    });
+  }
+
   /* async restoreSession(token: string): Promise<Session> {
     try {
       const session = await Session.restore(token);
