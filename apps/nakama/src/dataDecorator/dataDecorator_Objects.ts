@@ -54,7 +54,7 @@ interface dataDecorator_UserState {
   Username: string;
   Ready: boolean;
   Position: number;
-  Score: number;
+  Scores: number[];
   presence: nkruntime.Presence;
 }
 

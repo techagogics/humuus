@@ -1,7 +1,7 @@
 const dataDecorator_Tickrate = 10;
 const dataDecorator_MaxEmptyTicks =
   MAX_TIME_WITHOUT_PLAYERS_IN_SEC * dataDecorator_Tickrate;
-const dataDecorator_DefaultRoundLength = 10;
+const dataDecorator_DefaultRoundLength = 30;
 
 let dataDecorator_MatchInit: nkruntime.MatchInitFunction<dataDecorator_State> =
   function (
@@ -75,7 +75,7 @@ let dataDecorator_MatchJoin: nkruntime.MatchJoinFunction<dataDecorator_State> =
         Username: presence.username,
         Position: Object.keys(state.playerStates).length,
         Ready: false,
-        Score: 0,
+        Scores: [],
         presence: presence,
       };
       state.playerStates[presence.userId] = playerState;
@@ -281,6 +281,7 @@ function dataDecorator_startMatch(
   dispatcher.broadcastMessage(dataDecorator_OpCodes.StartMatch, '', null, null);
   state.playing = true;
   state.label.open = 0;
+  dispatcher.matchLabelUpdate(JSON.stringify(state.label));
 
   logger.info(`Match started of type: ${state.label.matchType}`);
 }
@@ -407,6 +408,7 @@ function dataDecorator_StartMinigame(
       null
     );
   });
+  state.roundState.Round++;
   state.roundState.TimeLeft = state.roundLength;
   state.roundState.inMinigame = true;
 
@@ -420,14 +422,14 @@ function dataDecorator_UpdatePlayerScore(
   message: nkruntime.MatchMessage,
   nk: nkruntime.Nakama
 ) {
-  state.playerStates[message.sender.userId].Score += clamp(
-    JSON.parse(nk.binaryToString(message.data)),
-    0,
-    3000
-  );
+  state.playerStates[message.sender.userId].Scores[state.roundState.Round] =
+    JSON.parse(nk.binaryToString(message.data));
   dispatcher.broadcastMessage(
     dataDecorator_OpCodes.PlayerRoundResult,
-    state.playerStates[message.sender.userId].Score.toString(),
+    JSON.stringify({
+      round: state.roundState.Round - 1,
+      score: parseInt(nk.binaryToString(message.data)),
+    }),
     null,
     message.sender
   );
