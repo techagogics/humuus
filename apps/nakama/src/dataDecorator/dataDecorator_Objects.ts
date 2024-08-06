@@ -16,6 +16,8 @@ interface dataDecorator_State {
   roundLength: number;
   // Stores data of the current round.
   roundState: dataDecorator_RoundState;
+  // Scores for each minigame type.
+  minigameScores: { [gameType: number]: number };
 }
 
 enum dataDecorator_OpCodes {

@@ -32,6 +32,7 @@ let dataDecorator_MatchInit: nkruntime.MatchInitFunction<dataDecorator_State> =
         PlayersReachedTarget: [],
         inMinigame: false,
       },
+      minigameScores: {},
     };
 
     return {
@@ -390,16 +391,18 @@ function dataDecorator_StartMinigame(
     return;
   }
 
-  const minigames: string[] = JSON.parse(nk.binaryToString(message.data));
-  var usedMinigames = minigames;
+  var minigames: string[] = JSON.parse(nk.binaryToString(message.data));
 
   Object.keys(state.playerStates).forEach(function (userId) {
     const playerState = state.playerStates[userId];
-    const miniGameIndex = (Math.random() * usedMinigames.length) | 0;
-    var minigame = usedMinigames[miniGameIndex];
-    delete usedMinigames[miniGameIndex];
-    if (usedMinigames.length == 0) {
-      usedMinigames = minigames;
+    const miniGameIndex = (Math.random() * minigames.length) | 0;
+    var minigame = minigames[miniGameIndex];
+    logger.info(
+      `Sending minigame path to player: ${minigame} with index ${miniGameIndex} from the list ${minigames}`
+    );
+    minigames.splice(miniGameIndex, 1);
+    if (minigames.length == 0) {
+      minigames = JSON.parse(nk.binaryToString(message.data));
     }
     dispatcher.broadcastMessage(
       dataDecorator_OpCodes.StartMinigame,
