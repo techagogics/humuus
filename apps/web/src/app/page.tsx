@@ -1,8 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/OldButton';
-import Link from 'next/link';
-
 import { useState, useEffect, useRef } from 'react';
 
 import Nakama from '@/services/nakama';
@@ -10,6 +7,19 @@ import Nakama from '@/services/nakama';
 import { navigate } from '@/services/redirect';
 
 import { GameType } from '@/lib/matches';
+
+import Header from '@/components/ui/Header';
+
+import Footer from '@/components/ui/Footer';
+
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from '@/components/ui/input-otp';
+
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
   const [matchJoinCode, setMatchJoinCode] = useState<string>('');
@@ -47,55 +57,50 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen justify-center items-center">
-      <div className="flex flex-col gap-20 items-center">
-        <div className="flex flex-col gap-5 w-25 font-bold">
-          <input
-            value={matchJoinCode}
-            placeholder="Match ID"
-            onChange={(evt) => setMatchJoinCode(evt.target.value)}
-            className="text-center text-2xl"
-          />
-          <Button
-            onClick={joinMatch}
-            size="lg"
-            variant="primary"
-            className="m-auto"
-            asChild
-          >
-            <Link href="">Join the Game!</Link>
-          </Button>
-        </div>
-        <div className="flex flex-wrap gap-10">
-          <Button
-            onClick={() => createMatch(GameType.sharedTextInput)}
-            size="lg"
-            variant="danger"
-            className="m-auto"
-            asChild
-          >
-            <Link href="">Test Game!</Link>
-          </Button>
-          <Button
-            onClick={() => createMatch(GameType.defaultQuiz)}
-            size="lg"
-            variant="danger"
-            className="m-auto"
-            asChild
-          >
-            <Link href="">Quiz Game!</Link>
-          </Button>
-          <Button
-            onClick={() => createMatch(GameType.guessTheFake)}
-            size="lg"
-            variant="danger"
-            className="m-auto"
-            asChild
-          >
-            <Link href="">Guess The Fake Game!</Link>
-          </Button>
+    <div className="flex flex-col h-full">
+      <Header></Header>
+      <div className="flex-1 flex justify-center items-center">
+        <div className="flex flex-col gap-20 items-center">
+          <div className="flex flex-col gap-5 font-bold">
+            <div className="flex justify-center">
+              <InputOTP
+                maxLength={4}
+                value={matchJoinCode}
+                onChange={(value) => setMatchJoinCode(value)}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            <Button onClick={joinMatch} className="m-auto">
+              Join the Game!
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-10">
+            <Button onClick={() => createMatch('workshop')} className="m-auto">
+              Workshop!
+            </Button>
+            <Button
+              onClick={() => createMatch(GameType.defaultQuiz)}
+              className="m-auto"
+            >
+              Quiz Game!
+            </Button>
+            <Button
+              onClick={() => createMatch(GameType.guessTheFake)}
+              className="m-auto"
+            >
+              Guess The Fake Game!
+            </Button>
+          </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
