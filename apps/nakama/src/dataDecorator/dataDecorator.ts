@@ -390,10 +390,14 @@ function dataDecorator_StartMinigame(
   if (message.sender.userId != state.owner) {
     return;
   }
+  logger.info('Data from client: ' + nk.binaryToString(message.data));
+  var dataJson: { [gameType: number]: string } = JSON.parse(
+    nk.binaryToString(message.data)
+  );
 
-  var minigames: string[] = JSON.parse(nk.binaryToString(message.data));
+  //var minigames: string[] = JSON.parse(nk.binaryToString(message.data));
 
-  Object.keys(state.playerStates).forEach(function (userId) {
+  /*Object.keys(state.playerStates).forEach(function (userId) {
     const playerState = state.playerStates[userId];
     const miniGameIndex = (Math.random() * minigames.length) | 0;
     var minigame = minigames[miniGameIndex];
@@ -410,7 +414,28 @@ function dataDecorator_StartMinigame(
       [playerState.presence],
       null
     );
+  });*/
+  Object.keys(state.playerStates).forEach(function (userId) {
+    const playerState = state.playerStates[userId];
+    const posibleMinigames: string[] = Object.keys(dataJson);
+    const minigameType =
+      posibleMinigames[(Math.random() * posibleMinigames.length) | 0];
+    var minigame = dataJson[parseInt(minigameType)];
+    logger.info(
+      `Sending minigame path to player: ${minigame} with index ${minigameType} from the list ${dataJson}`
+    );
+    delete dataJson[parseInt(minigameType)];
+    if (Object.keys(dataJson).length == 0) {
+      dataJson = JSON.parse(nk.binaryToString(message.data));
+    }
+    dispatcher.broadcastMessage(
+      dataDecorator_OpCodes.StartMinigame,
+      JSON.stringify({ gameType: parseInt(minigameType), path: minigame }),
+      [playerState.presence],
+      null
+    );
   });
+
   state.roundState.Round++;
   state.roundState.TimeLeft = state.roundLength;
   state.roundState.inMinigame = true;
@@ -425,13 +450,26 @@ function dataDecorator_UpdatePlayerScore(
   message: nkruntime.MatchMessage,
   nk: nkruntime.Nakama
 ) {
-  state.playerStates[message.sender.userId].Scores[state.roundState.Round] =
-    JSON.parse(nk.binaryToString(message.data));
+  var dataJson = JSON.parse(nk.binaryToString(message.data));
+  logger.info(
+    'Score revieved by player:' +
+      dataJson.gameType +
+      ' score: ' +
+      dataJson.score
+  );
+
+  if (state.minigameScores.hasOwnProperty(dataJson.gameType)) {
+    state.minigameScores[dataJson.gameType] += parseInt(dataJson.score);
+  } else {
+    state.minigameScores[dataJson.gameType] = parseInt(dataJson.score);
+  }
+
   dispatcher.broadcastMessage(
     dataDecorator_OpCodes.PlayerRoundResult,
     JSON.stringify({
       round: state.roundState.Round - 1,
-      score: parseInt(nk.binaryToString(message.data)),
+      gameType: dataJson.gameType,
+      score: parseInt(dataJson.score),
     }),
     null,
     message.sender
