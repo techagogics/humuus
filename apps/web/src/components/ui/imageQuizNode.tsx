@@ -53,48 +53,52 @@ function ImageQuizNode(props: any) {
           <b>Auflösung!</b>
         )}
       </p>
-      <div className="grid grid-cols-2 gap-4">
-        <div
-          className={
-            (currentAnswer == 0 && correctAnswer < 0
-              ? 'outline outline-8 outline-yellow-300'
-              : ' ') +
-            (myAnswer == 0 && myAnswer != correctAnswer
-              ? 'outline outline-8 outline-red-600'
-              : ' ') +
-            ' ' +
-            (correctAnswer == 0 ? 'outline outline-8 outline-green-400' : ' ')
-          }
-          onClick={() => handleOnChange(0)}
-        >
-          <Image
-            width={200}
-            height={200}
-            style={{ width: '100%', height: 'auto' }}
-            src={'/guessTheFake_Data/' + props.images[0] + '.jpeg'}
-            alt="Option 1"
-          />
-        </div>
-        <div
-          className={
-            (currentAnswer == 1 && correctAnswer < 0
-              ? 'outline outline-8 outline-yellow-300'
-              : ' ') +
-            (myAnswer == 1 && myAnswer != correctAnswer
-              ? 'outline outline-8 outline-red-600'
-              : ' ') +
-            ' ' +
-            (correctAnswer == 1 ? 'outline outline-8 outline-green-400' : ' ')
-          }
-          onClick={() => handleOnChange(1)}
-        >
-          <Image
-            width={200}
-            height={200}
-            style={{ width: '100%', height: 'auto' }}
-            src={'/guessTheFake_Data/' + props.images[1] + '.jpeg'}
-            alt="Option 2"
-          />
+      <div className="w-full overflow-hidden">
+        <div className="relativ m-auto aspect-[2/1] max-md:aspect-[1/2] max-h-full grid grid-cols-2 max-md:grid-cols-1 max-md:grid-rows-2 gap-4 p-4">
+          <div
+            className={
+              'relative aspect-square w-full ' +
+              (currentAnswer == 0 && correctAnswer < 0
+                ? 'outline outline-8 outline-yellow-300'
+                : ' ') +
+              (myAnswer == 0 && myAnswer != correctAnswer
+                ? 'outline outline-8 outline-red-600'
+                : ' ') +
+              ' ' +
+              (correctAnswer == 0 ? 'outline outline-8 outline-green-400' : ' ')
+            }
+            onClick={() => handleOnChange(0)}
+          >
+            <Image
+              fill={true}
+              style={{ objectFit: 'contain' }}
+              sizes="100%"
+              src={'/guessTheFake_Data/' + props.images[0] + '.jpeg'}
+              alt="Option 1"
+            />
+          </div>
+          <div
+            className={
+              'relative aspect-square w-full ' +
+              (currentAnswer == 1 && correctAnswer < 0
+                ? 'outline outline-8 outline-yellow-300'
+                : ' ') +
+              (myAnswer == 1 && myAnswer != correctAnswer
+                ? 'outline outline-8 outline-red-600'
+                : ' ') +
+              ' ' +
+              (correctAnswer == 1 ? 'outline outline-8 outline-green-400' : ' ')
+            }
+            onClick={() => handleOnChange(1)}
+          >
+            <Image
+              fill={true}
+              style={{ objectFit: 'contain' }}
+              sizes="100%"
+              src={'/guessTheFake_Data/' + props.images[1] + '.jpeg'}
+              alt="Option 2"
+            />
+          </div>
         </div>
       </div>
     </>

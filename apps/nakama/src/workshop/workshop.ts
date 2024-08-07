@@ -259,21 +259,25 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
     switch (message.opCode) {
       case workshop_OpCode.START:
         // Skips to next Node
+        if (message.sender.userId == state.matchHost) {
+          if (state.promisedAnswer) {
+            state.waitTicks = 1;
+            break;
+          }
 
-        if (state.promisedAnswer) {
-          state.waitTicks = 1;
-          break;
-        }
+          state.currentNode++;
 
-        state.currentNode++;
+          if (state.currentNode >= state.workshopData.length) {
+            state.playing = false;
+            state.currentNode = 0;
 
-        if (state.currentNode >= state.workshopData.length) {
-          state.playing = false;
-          state.currentNode = 0;
-
-          dispatcher.broadcastMessage(workshop_OpCode.END, JSON.stringify({}));
-        } else {
-          state = sendUpdate(state, dispatcher, workshop_Tickrate);
+            dispatcher.broadcastMessage(
+              workshop_OpCode.END,
+              JSON.stringify({})
+            );
+          } else {
+            state = sendUpdate(state, dispatcher, workshop_Tickrate);
+          }
         }
         break;
 
@@ -292,10 +296,6 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
           } else {
             state = sendUpdate(state, dispatcher, workshop_Tickrate);
           }
-
-          state.countAnswers = 0;
-          state.waitTicks = 0;
-          state.promisedAnswer = false;
         }
         break;
 

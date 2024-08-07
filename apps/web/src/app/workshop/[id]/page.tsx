@@ -334,7 +334,9 @@ export default function SharedTextInput(props: any) {
         joinCode={match.current.joinCode}
         isHost={isHost}
       />
-      <div className="w-full h-full p-10">{renderComponent(currentNode)}</div>
+      <div className="w-full h-full max-h-full max-w-full overflow-hidden flex flex-col items-center justify-center p-10 max-md:p-5">
+        {renderComponent(currentNode)}
+      </div>
       <Footer
         forwardButtonText={currentNode < 1 ? 'Start' : 'Weiter'}
         nextButton={startAndNext}

@@ -3,7 +3,7 @@ import { Button } from './button';
 
 function Header(props: any) {
   return (
-    <nav className="grid grid-flow-col items-center p-10 text-white text-base">
+    <nav className="grid grid-flow-col items-center p-10 text-white text-base max-md:p-5 max-md:pb-0">
       <div>
         <span
           onClick={() => {
