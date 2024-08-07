@@ -56,9 +56,8 @@ export default function Home() {
     navigate(newMatch);
   }
 
-  return (
-    <div className="flex flex-col h-full">
-      <Header></Header>
+  function renderComponent() {
+    return (
       <div className="flex-1 flex justify-center items-center">
         <div className="flex flex-col gap-20 items-center">
           <div className="flex flex-col gap-5 font-bold">
@@ -81,7 +80,7 @@ export default function Home() {
               Join the Game!
             </Button>
           </div>
-          <div className="flex flex-wrap gap-10">
+          <div className="flex flex-wrap gap-10 max-md:hidden">
             <Button onClick={() => createMatch('workshop')} className="m-auto">
               Workshop!
             </Button>
@@ -99,6 +98,15 @@ export default function Home() {
             </Button>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <Header></Header>
+      <div className="w-full h-full max-h-full max-w-full overflow-hidden flex flex-col items-center justify-center p-10 max-md:p-5">
+        {renderComponent()}
       </div>
       <Footer />
     </div>

@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
-import { Button } from '@/components/ui/button';
-
 function ImageQuizNode(props: any) {
   const [correctAnswer, setCorrectAnswer] = useState(-1);
 
@@ -49,29 +47,32 @@ function ImageQuizNode(props: any) {
           ) : (
             <b>Warte auf Antworten!</b>
           )
+        ) : props.timeLeft != null ? (
+          <b>Nächstes Node in {props.timeLeft}</b>
         ) : (
           <b>Auflösung!</b>
         )}
       </p>
+      <p className="font-black text-2xl mb-5">{props.text}</p>
       <div className="w-full overflow-hidden">
-        <div className="relativ m-auto aspect-[2/1] max-md:aspect-[1/2] max-h-full grid grid-cols-2 max-md:grid-cols-1 max-md:grid-rows-2 gap-4 p-4">
+        <div className="relativ m-auto aspect-[2/1] max-md:aspect-[1/2] max-h-full grid grid-cols-2 max-md:grid-cols-1 max-md:grid-rows-2 gap-4">
           <div
             className={
-              'relative aspect-square w-full ' +
+              'relative w-full overflow-hidden rounded-xl box-border border-8 ' +
               (currentAnswer == 0 && correctAnswer < 0
-                ? 'outline outline-8 outline-yellow-300'
+                ? 'border-yellow-300'
                 : ' ') +
               (myAnswer == 0 && myAnswer != correctAnswer
-                ? 'outline outline-8 outline-red-600'
+                ? 'border-red-600'
                 : ' ') +
               ' ' +
-              (correctAnswer == 0 ? 'outline outline-8 outline-green-400' : ' ')
+              (correctAnswer == 0 ? 'border-green-400' : ' ')
             }
             onClick={() => handleOnChange(0)}
           >
             <Image
               fill={true}
-              style={{ objectFit: 'contain' }}
+              style={{ objectFit: 'cover' }}
               sizes="100%"
               src={'/guessTheFake_Data/' + props.images[0] + '.jpeg'}
               alt="Option 1"
@@ -79,21 +80,21 @@ function ImageQuizNode(props: any) {
           </div>
           <div
             className={
-              'relative aspect-square w-full ' +
+              'relative w-full overflow-hidden rounded-xl box-border border-8 ' +
               (currentAnswer == 1 && correctAnswer < 0
-                ? 'outline outline-8 outline-yellow-300'
+                ? 'border-yellow-300'
                 : ' ') +
               (myAnswer == 1 && myAnswer != correctAnswer
-                ? 'outline outline-8 outline-red-600'
+                ? 'border-red-600'
                 : ' ') +
               ' ' +
-              (correctAnswer == 1 ? 'outline outline-8 outline-green-400' : ' ')
+              (correctAnswer == 1 ? 'border-green-400' : ' ')
             }
             onClick={() => handleOnChange(1)}
           >
             <Image
               fill={true}
-              style={{ objectFit: 'contain' }}
+              style={{ objectFit: 'cover' }}
               sizes="100%"
               src={'/guessTheFake_Data/' + props.images[1] + '.jpeg'}
               alt="Option 2"

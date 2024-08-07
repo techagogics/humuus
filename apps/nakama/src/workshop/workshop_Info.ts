@@ -22,7 +22,9 @@ interface workshop_State {
 
   waitTicks: number;
 
-  scoreboard: { [key: string]: number };
+  autoSkip: boolean;
+
+  scoreboard: { [key: number]: Array<string> };
 
   matchHost: string;
 
@@ -87,9 +89,10 @@ function workshop_connectedPlayers(s: workshop_State): number {
 enum NodeType {
   Lobby = 0,
   Scoreboard = 1,
-  Headline = 2,
-  DefaultQuiz = 3,
-  ImgQuiz = 4,
+  Countdown = 2,
+  Headline = 3,
+  DefaultQuiz = 4,
+  ImgQuiz = 5,
 }
 
 interface WorkshopNode {
@@ -109,15 +112,13 @@ const QuizNode: WorkshopNode = {
     secondsAutoNext: 0,
   },
   data: {
-    question: {
-      text: 'Was ist ein Deepfake?',
-      options: [
-        'Gefälschte Medieninhalte',
-        'Eine neue Trendsportart',
-        'Ein leckerer Nachtisch',
-        'Ein fieser Algorithmus',
-      ],
-    },
+    text: 'Was ist ein Deepfake?',
+    options: [
+      'Gefälschte Medieninhalte',
+      'Eine neue Trendsportart',
+      'Ein leckerer Nachtisch',
+      'Ein fieser Algorithmus',
+    ],
   },
   answer: [1],
 };
@@ -129,6 +130,7 @@ const ImgNode: WorkshopNode = {
     secondsAutoNext: 0,
   },
   data: {
+    text: 'Was ist ein Deepfake?',
     images: ['fake/4215', 'real/2092'],
   },
   answer: [1],
@@ -138,7 +140,7 @@ const ImgNodeTimer: WorkshopNode = {
   type: NodeType.ImgQuiz,
   settings: {
     secondsUntilAnswer: 20,
-    secondsAutoNext: 0,
+    secondsAutoNext: 5,
   },
   data: {
     images: ['real/2092', 'fake/4215'],
@@ -150,7 +152,7 @@ const HeadlineNode: WorkshopNode = {
   type: NodeType.Headline,
   settings: {
     secondsUntilAnswer: 0,
-    secondsAutoNext: 0,
+    secondsAutoNext: 5,
   },
   data: {
     text: 'Das ist eine Headline!',
@@ -168,12 +170,28 @@ const ScoreboardNode: WorkshopNode = {
   answer: null,
 };
 
+const CountdownNode: WorkshopNode = {
+  type: NodeType.Countdown,
+  settings: {
+    secondsUntilAnswer: 0,
+    secondsAutoNext: 10,
+  },
+  data: {},
+  answer: null,
+};
+
 let workshop = [
-  HeadlineNode,
-  ImgNode,
-  HeadlineNode,
-  ImgNodeTimer,
-  HeadlineNode,
+  CountdownNode,
+  QuizNode,
+  ScoreboardNode,
+  QuizNode,
+  ScoreboardNode,
+  QuizNode,
+  ScoreboardNode,
+  QuizNode,
+  ScoreboardNode,
+  QuizNode,
+  ScoreboardNode,
 ];
 
 function sendUpdate(
@@ -181,16 +199,36 @@ function sendUpdate(
   dispatcher: nkruntime.MatchDispatcher,
   tickRate: number
 ) {
-  let update = {
-    nodeType: state.workshopData[state.currentNode].type,
-    nodeData: state.workshopData[state.currentNode].data,
-  };
+  let update;
+
+  state.scoreboard[state.currentNode] = [];
+
+  if (state.workshopData[state.currentNode].type == NodeType.Scoreboard) {
+    update = {
+      nodeType: state.workshopData[state.currentNode].type,
+      nodeData: renderScoreboard(state),
+    };
+  } else {
+    update = {
+      nodeType: state.workshopData[state.currentNode].type,
+      nodeData: state.workshopData[state.currentNode].data,
+    };
+  }
 
   state.countAnswers = 0;
   state.waitTicks = 0;
   state.promisedAnswer = false;
+  state.autoSkip = false;
 
   dispatcher.broadcastMessage(workshop_OpCode.UPDATE, JSON.stringify(update));
+
+  if (state.workshopData[state.currentNode].settings.secondsAutoNext > 0) {
+    state.waitTicks =
+      state.workshopData[state.currentNode].settings.secondsAutoNext * tickRate;
+
+    state.autoSkip = true;
+    sendTimer(state, dispatcher);
+  }
 
   if (state.workshopData[state.currentNode].answer != null) {
     state.waitTicks =
@@ -198,7 +236,73 @@ function sendUpdate(
       tickRate;
 
     state.promisedAnswer = true;
+    if (state.waitTicks > 0) {
+      sendTimer(state, dispatcher);
+    }
   }
 
   return state;
+}
+
+function sendTimer(
+  state: workshop_State,
+  dispatcher: nkruntime.MatchDispatcher
+) {
+  let timer = {
+    secondsLeft: Math.ceil(state.waitTicks / workshop_Tickrate),
+  };
+
+  dispatcher.broadcastMessage(workshop_OpCode.TIMER, JSON.stringify(timer));
+}
+
+function renderScoreboard(state: workshop_State): object {
+  let scoreboard: { [key: string]: { username: string; score: number } } = {};
+
+  for (let userID in state.presences) {
+    if (userID != state.matchHost) {
+      scoreboard[userID] = {
+        username: String(state.presences[userID]?.username),
+        score: 0,
+      };
+    }
+  }
+
+  for (let game in state.scoreboard) {
+    if (parseInt(game) <= state.currentNode) {
+      for (let user in state.scoreboard[game]) {
+        if (scoreboard[state.scoreboard[game][user]] == undefined) {
+          scoreboard[state.scoreboard[game][user]] = {
+            username: String(
+              state.presences[state.scoreboard[game][user]]?.username
+            ),
+            score: 0,
+          };
+        }
+
+        scoreboard[state.scoreboard[game][user]].score++;
+      }
+    }
+  }
+
+  let sortable = [];
+  for (let key in scoreboard) {
+    sortable.push([key, scoreboard[key].username, scoreboard[key].score]);
+  }
+
+  sortable.sort(function (a: Array<any>, b: Array<any>) {
+    return a[2] - b[2];
+  });
+
+  sortable.reverse();
+
+  scoreboard = {};
+
+  for (let key in sortable) {
+    scoreboard[sortable[key][0]] = {
+      username: String(sortable[key][1]),
+      score: sortable[key][2] as number,
+    };
+  }
+
+  return scoreboard;
 }

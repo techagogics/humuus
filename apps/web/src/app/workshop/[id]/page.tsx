@@ -11,6 +11,9 @@ import Footer from '@/components/ui/Footer';
 import PlayerList from '@/components/ui/PlayerList';
 import Headline from '@/components/ui/Headline';
 import ImageQuizNode from '@/components/ui/imageQuizNode';
+import DefaultQuiz from '@/components/ui/DefaultQuiz';
+import Countdown from '@/components/ui/Countdown';
+import Scoreboard from '@/components/ui/Scoreboard';
 
 export default function SharedTextInput(props: any) {
   const [isHost, setIsHost] = useState<boolean>(false);
@@ -18,9 +21,10 @@ export default function SharedTextInput(props: any) {
   enum NodeType {
     Lobby = 0,
     Scoreboard = 1,
-    Headline = 2,
-    DefaultQuiz = 3,
-    ImgQuiz = 4,
+    Countdown = 2,
+    Headline = 3,
+    DefaultQuiz = 4,
+    ImgQuiz = 5,
   }
 
   const [currentNode, setCurrentNode] = useState<number>(-1);
@@ -32,7 +36,7 @@ export default function SharedTextInput(props: any) {
 
   const [playerList, setPlayerList] = useState<Array<string>>([]);
 
-  const [timeLeft, setTimeLeft] = useState<number | null>(0);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   interface Match {
     joinCode: string;
@@ -183,13 +187,6 @@ export default function SharedTextInput(props: any) {
 
             listofUsernames.sort();
 
-            listofUsernamesHTML = '';
-
-            listofUsernames.forEach((username) => {
-              listofUsernamesHTML =
-                listofUsernamesHTML + '<p>' + username + '</p>';
-            });
-
             setPlayerList(listofUsernames);
 
             // Handle START message
@@ -202,6 +199,8 @@ export default function SharedTextInput(props: any) {
             setTimeLeft(null);
 
             setAnswer([]);
+
+            myAnswer.current = [];
 
             setCurrentNode(json.nodeType);
 
@@ -304,19 +303,47 @@ export default function SharedTextInput(props: any) {
     switch (nodeType) {
       case NodeType.Lobby:
         return <PlayerList isHost={isHost} users={playerList} />;
+
+      case NodeType.Scoreboard:
+        return <Scoreboard scoreboard={nodeData} />;
+
+      case NodeType.Countdown:
+        return <Countdown time={timeLeft} />;
+
       case NodeType.Headline:
         let tempHeadline = nodeData as { text: string };
-        return <Headline text={tempHeadline.text} />;
+        return <Headline timeLeft={timeLeft} text={tempHeadline.text} />;
 
       case NodeType.ImgQuiz:
-        let tempImgQuiz = nodeData as { images: Array<string> };
+        let tempImgQuiz = nodeData as { text: string; images: Array<string> };
         return (
           <ImageQuizNode
             setAnswer={(num: Array<number>) => {
               myAnswer.current = num;
             }}
             sendDone={sendDone}
+            text={tempImgQuiz.text}
             images={tempImgQuiz.images}
+            answer={answer}
+            timeLeft={timeLeft}
+            onlyShow={isHost}
+          />
+        );
+
+      case NodeType.DefaultQuiz:
+        let tempDefaultQuiz = nodeData as {
+          text: string;
+          options: Array<string>;
+        };
+
+        return (
+          <DefaultQuiz
+            setAnswer={(num: Array<number>) => {
+              myAnswer.current = num;
+            }}
+            sendDone={sendDone}
+            text={tempDefaultQuiz.text}
+            answers={tempDefaultQuiz.options}
             answer={answer}
             timeLeft={timeLeft}
             onlyShow={isHost}
@@ -324,7 +351,7 @@ export default function SharedTextInput(props: any) {
         );
     }
 
-    return <Headline text="Loading..." />;
+    return <Headline timeLeft={timeLeft} text="Loading..." />;
   }
 
   return (

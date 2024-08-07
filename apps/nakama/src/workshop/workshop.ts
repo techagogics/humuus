@@ -29,6 +29,7 @@ let workshop_MatchInit: nkruntime.MatchInitFunction<workshop_State> = function (
     promisedAnswer: false,
     countAnswers: 0,
     waitTicks: 0,
+    autoSkip: false,
     scoreboard: {},
     matchHost: '',
     hostAsPresenter: true,
@@ -218,18 +219,14 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
     return { state };
   }
 
-  if (state.promisedAnswer) {
+  if (state.promisedAnswer || state.autoSkip) {
     state.waitTicks--;
 
     if (state.waitTicks > 0) {
-      let timer = {
-        secondsLeft: Math.ceil(state.waitTicks / workshop_Tickrate),
-      };
-
-      dispatcher.broadcastMessage(workshop_OpCode.TIMER, JSON.stringify(timer));
+      sendTimer(state, dispatcher);
     }
 
-    if (state.waitTicks == 0) {
+    if (state.waitTicks == 0 && state.promisedAnswer) {
       state.countAnswers = workshop_connectedPlayers(state);
     }
 
@@ -249,8 +246,28 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
       );
 
       state.countAnswers = 0;
-      state.waitTicks = 0;
       state.promisedAnswer = false;
+
+      if (state.autoSkip) {
+        state.waitTicks =
+          state.workshopData[state.currentNode].settings.secondsAutoNext *
+          workshop_Tickrate;
+      } else {
+        state.waitTicks = 0;
+      }
+    }
+
+    if (state.waitTicks == 0 && state.autoSkip) {
+      state.currentNode++;
+
+      if (state.currentNode >= state.workshopData.length) {
+        state.playing = false;
+        state.currentNode = 0;
+
+        dispatcher.broadcastMessage(workshop_OpCode.END, JSON.stringify({}));
+      } else {
+        state = sendUpdate(state, dispatcher, workshop_Tickrate);
+      }
     }
   }
 
@@ -260,7 +277,7 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
       case workshop_OpCode.START:
         // Skips to next Node
         if (message.sender.userId == state.matchHost) {
-          if (state.promisedAnswer) {
+          if (state.promisedAnswer || state.autoSkip) {
             state.waitTicks = 1;
             break;
           }
@@ -302,8 +319,8 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
       case workshop_OpCode.ANSWER:
         let playerMsg = JSON.parse(nk.binaryToString(message.data));
 
-        if (state.scoreboard[message.sender.userId] == undefined) {
-          state.scoreboard[message.sender.userId] = 0;
+        if (state.scoreboard[state.currentNode] == undefined) {
+          state.scoreboard[state.currentNode] = [];
         }
 
         if (
@@ -311,7 +328,9 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
             playerMsg.answer[0]
           ) !== -1
         ) {
-          state.scoreboard[message.sender.userId]++;
+          let temp = state.scoreboard[state.currentNode];
+          temp.push(message.sender.userId);
+          state.scoreboard[state.currentNode] = temp;
         }
         break;
 
