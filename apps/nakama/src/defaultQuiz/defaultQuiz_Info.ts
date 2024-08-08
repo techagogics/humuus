@@ -117,24 +117,161 @@ interface defaultQuiz_QuestionAndAnswer {
 const defaultQuiz_Test: Array<defaultQuiz_QuestionAndAnswer> = [
   {
     question: {
-      text: 'Das ist Frage Nr. 1?',
-      options: ['Antwort A?', 'Antwort B!', 'Antwort C.', 'Antwort D'],
+      text: 'Was ist ein Deepfake?',
+      options: [
+        'Gefälschte Medieninhalte',
+        'Eine neue Trendsportart',
+        'Ein leckerer Nachtisch',
+        'Ein fieser Algorithmus',
+      ],
+    },
+    answer: [1],
+  },
+  {
+    question: {
+      text: 'Was können Deepfakes sein?',
+      options: ['Videos', 'Fotos', 'Zeitungsartikel', 'Leckere Nachtische'],
+    },
+    answer: [1, 2],
+  },
+  {
+    question: {
+      text: 'Wie kannst du einen Deepfake erkennen?',
+      options: [
+        'An Bilddetails wie Stirnrunzeln',
+        'Am Lächeln',
+        'An den Schuhen',
+        'Am Schatten',
+      ],
+    },
+    answer: [1, 4],
+  },
+  {
+    question: {
+      text: 'Wie kannst du die Echtheit von Fotos/Videos überprüfen?',
+      options: [
+        'Ich esse einen leckeren Nachtisch und achte auf mein Bauchgefühl',
+        'Ich vertraue den Kommentaren unter dem Video',
+        'Ich checke die Quelle des Videos',
+        'Ich rufe den Telefonjoker an',
+      ],
+    },
+    answer: [3],
+  },
+  {
+    question: {
+      text: 'Welche Tipps gibt es noch?',
+      options: [
+        'Auffälliges Make Up ist immer Fake',
+        'Ich nasche einen leckeren Nachtisch',
+        'Ich berate mich mit Anderen',
+        'Ich vergleiche das Foto mit anderen Fotos der Person',
+      ],
+    },
+    answer: [3, 4],
+  },
+  {
+    question: {
+      text: 'Handbewegungen können helfen Deepfakes zu erkennen. Warum?',
+      options: [
+        'Handbewegungen sind leicht zu faken',
+        'Deepfakes zeigen nie Hände',
+        'Durch Bewegungen, wie streichen durchs Haar entstehen Fehler',
+        'Hände im Gesicht verdecken die Fehler im Deepfake',
+      ],
+    },
+    answer: [3],
+  },
+  {
+    question: {
+      text: 'Wofür können Deepfakes NICHT eingesetzt werden?',
+      options: [
+        'Fake News',
+        'Tote zum Leben erwecken',
+        'Cybermobbing',
+        'Hausaufgaben machen',
+      ],
     },
     answer: [4],
   },
   {
     question: {
-      text: 'Das ist Frage Nr. 2?',
-      options: ['Antwort A?', 'Antwort B!', 'Antwort C.', 'Antwort D'],
+      text: 'Wer steckt hinter dem TikTok-Kanal "deeptomcruise"?',
+      options: [
+        'kein Mensch - ein rein digitaler Avatar',
+        'kein Deepfake - ein realer Doppelgänger von Tom Cruise',
+        'Deepfakes von einem Doppelgänger',
+        'Tom Cruise selbst steckt dahinter',
+      ],
+    },
+    answer: [3],
+  },
+  {
+    question: {
+      text: 'Was ist der Unterschied zwischen einem "Deepfake" und einem normalen gefälschten Video?',
+      options: [
+        'Es gibt keinen Unterschied',
+        'Deepfakes nutzen künstliche Intelligenz um ein Gesicht einzufügen',
+        'Der leckere Nachtisch',
+        'Deepfakes sind immer professionell produziert',
+      ],
     },
     answer: [2],
   },
   {
     question: {
-      text: 'Mehrere Antwortmöglichkeiten?',
-      options: ['Antwort A?', 'Antwort B!', 'Antwort C.', 'Antwort D'],
+      text: 'Welche Technologie steckt hinter Deepfakes?',
+      options: [
+        'Die HoloLens',
+        'Neuronale Netzwerke',
+        'Virtual Reality',
+        'Unreal Engine',
+      ],
     },
-    answer: [1, 4],
+    answer: [2],
+  },
+  {
+    question: {
+      text: 'Was solltest du tun, wenn du ein Deepfake entdeckst, in dem eine Person ungewollt dargestellt wird?',
+      options: [
+        'Ihn sofort auf allen sozialen Medien teilen',
+        'Die Entdeckung der Quelle melden und das Deepfake nicht weiter verbreiten',
+        'Einen bösen Kommentar hinterlassen',
+        'Auf das Video reagieren, indem man selbst ein Deepfake erstellt',
+      ],
+    },
+    answer: [2],
+  },
+  {
+    question: {
+      text: 'Deepfakes kann man immer anhand der Videoqualität erkennen!',
+      options: ['Richtig', 'Falsch'],
+    },
+    answer: [2],
+  },
+  {
+    question: {
+      text: 'Welche Aussage über Deepfakes ist korrekt?',
+      options: [
+        'Sie sind teuer herzustellen',
+        'Sie sind schwer zu erkennen',
+        'Sie benötigen Bilder einer Person als Trainingsdaten',
+        'Sie können nur auf ganz bestimmte Personen angewendet werden',
+      ],
+    },
+    answer: [2, 3],
+  },
+  {
+    question: {
+      text: 'Was ist das Ziel von Deepfake-Erkennungstechnologie?',
+      options: [
+        'Sie soll Deepfakes erstellen',
+        'Sie soll Deepfakes identifizieren und entfernen',
+        'Sie soll Deepfakes verbessern',
+        'Sie soll Deepfakes automatisch versenden',
+      ],
+    },
+    answer: [2, 3],
   },
 ];
 

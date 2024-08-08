@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/OldButton';
 import Link from 'next/link';
 
 import { useState, useEffect, useRef } from 'react';
@@ -65,6 +65,7 @@ export default function DefaultQuiz(props: any) {
       console.log(`MatchId: ${tempMatchID}`);
 
       if (tempMatchID == undefined) {
+        nakamaRef.current.socket.disconnect(true);
         navigate('/');
       }
 
@@ -77,6 +78,7 @@ export default function DefaultQuiz(props: any) {
       try {
         await nakamaRef.current.socket.joinMatch(tempMatchID);
       } catch (err) {
+        nakamaRef.current.socket.disconnect(true);
         navigate('/');
       }
     }
@@ -89,6 +91,7 @@ export default function DefaultQuiz(props: any) {
     try {
       await nakamaRef.current.socket.leaveMatch(match.current.id);
     } finally {
+      nakamaRef.current.socket.disconnect(true);
       navigate('/');
     }
   }
@@ -215,9 +218,12 @@ export default function DefaultQuiz(props: any) {
 
             presences = json.presences as Object;
 
-            setIsHost(json.host == nakamaRef.current.player?.id);
+            setIsHost(json.host == nakamaRef.current.session?.user_id);
 
-            if (json.host == nakamaRef.current.player?.id && json.isPresenter) {
+            if (
+              json.host == nakamaRef.current.session?.user_id &&
+              json.isPresenter
+            ) {
               setIsPresenter(true);
             } else {
               setIsPresenter(false);

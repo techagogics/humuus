@@ -35,7 +35,27 @@ let guessTheFake_MatchInit: nkruntime.MatchInitFunction<guessTheFake_State> =
       ticksShowingAnswer: 0,
     };
 
-    state.questions = guessTheFake_BuildImgArray();
+    let objectIds: nkruntime.StorageReadRequest[] = [
+      {
+        collection: 'workshops',
+        key: 'guess_the_fake',
+        userId: '00000000-0000-0000-0000-000000000000',
+      },
+    ];
+
+    let objects: nkruntime.StorageObject[] = [];
+
+    try {
+      objects = nk.storageRead(objectIds);
+    } catch (error) {
+      logger.info('Mein Error: %q', error);
+    }
+
+    let fakeArray = objects[0].value.data.fake;
+
+    let realArray = objects[0].value.data.real;
+
+    state.questions = guessTheFake_BuildImgArray(fakeArray, realArray);
 
     return {
       state,
@@ -353,7 +373,27 @@ let guessTheFake_MatchLoop: nkruntime.MatchLoopFunction<guessTheFake_State> =
             JSON.stringify(scoreboard)
           );
 
-          state.questions = guessTheFake_BuildImgArray();
+          let objectIds: nkruntime.StorageReadRequest[] = [
+            {
+              collection: 'workshops',
+              key: 'guess_the_fake',
+              userId: '00000000-0000-0000-0000-000000000000',
+            },
+          ];
+
+          let objects: nkruntime.StorageObject[] = [];
+
+          try {
+            objects = nk.storageRead(objectIds);
+          } catch (error) {
+            logger.info('Mein Error: %q', error);
+          }
+
+          let fakeArray = objects[0].value.data.fake;
+
+          let realArray = objects[0].value.data.real;
+
+          state.questions = guessTheFake_BuildImgArray(fakeArray, realArray);
 
           state.playing = false;
 

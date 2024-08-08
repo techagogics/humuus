@@ -26,7 +26,8 @@ let defaultQuiz_MatchInit: nkruntime.MatchInitFunction<defaultQuiz_State> =
       joinsInProgress: 0,
       playing: false,
       ticksUntilNextQuestion: 0,
-      questions: JSON.parse(defaultQuiz_ExampleQuestions),
+      //questions: JSON.parse(defaultQuiz_ExampleQuestions),
+      questions: [],
       currentQuestion: -1,
       countAnswers: 0,
       scoreboard: {},
@@ -34,6 +35,24 @@ let defaultQuiz_MatchInit: nkruntime.MatchInitFunction<defaultQuiz_State> =
       hostAsPresenter: true,
       ticksShowingAnswer: 0,
     };
+
+    let objectIds: nkruntime.StorageReadRequest[] = [
+      {
+        collection: 'workshops',
+        key: 'deepfake_detective',
+        userId: '00000000-0000-0000-0000-000000000000',
+      },
+    ];
+
+    let objects: nkruntime.StorageObject[] = [];
+
+    try {
+      objects = nk.storageRead(objectIds);
+    } catch (error) {
+      logger.info('Mein Error: %q', error);
+    }
+
+    state.questions = objects[0].value.data;
 
     return {
       state,

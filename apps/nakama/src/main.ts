@@ -6,6 +6,8 @@ const GAMETYPE_dataDecorator = 'dataDecorator';
 const GAMETYPE_sharedTextInput = 'sharedTextInput';
 const GAMETYPE_guessTheFake = 'guessTheFake';
 
+const GAMETYPE_workshop = 'workshop';
+
 function InitModule(
   ctx: nkruntime.Context,
   logger: nkruntime.Logger,
@@ -16,6 +18,8 @@ function InitModule(
 
   initializer.registerRpc('healthcheck', rpcHealthcheck);
 
+  initializer.registerRpc('Storage_API', rpcStorageAPI);
+
   initializer.registerRpc('Create_Match', rpcCreateMatch);
 
   initializer.registerRpc('Find_Match_By_Join_Code', rpcFindMatchByJoinCode);
@@ -23,6 +27,16 @@ function InitModule(
   initializer.registerRpc('Get_Match_By_MatchID', rpcGetMatchByMatchID);
 
   initializer.registerRpc('Get_Join_Code_Length', rpcGetJoinCodeLength);
+
+  initializer.registerMatch(GAMETYPE_workshop, {
+    matchInit: workshop_MatchInit,
+    matchJoinAttempt: workshop_MatchJoinAttempt,
+    matchJoin: workshop_MatchJoin,
+    matchLeave: workshop_MatchLeave,
+    matchLoop: workshop_MatchLoop,
+    matchSignal: workshop_MatchSignal,
+    matchTerminate: workshop_MatchTerminate,
+  });
 
   initializer.registerMatch(GAMETYPE_sharedTextInput, {
     matchInit: sharedTextInput_MatchInit,
