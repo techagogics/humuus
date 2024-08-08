@@ -215,9 +215,12 @@ export default function DefaultQuiz(props: any) {
 
             presences = json.presences as Object;
 
-            setIsHost(json.host == nakamaRef.current.player?.id);
+            setIsHost(json.host == nakamaRef.current.session?.user_id);
 
-            if (json.host == nakamaRef.current.player?.id && json.isPresenter) {
+            if (
+              json.host == nakamaRef.current.session?.user_id &&
+              json.isPresenter
+            ) {
               setIsPresenter(true);
             } else {
               setIsPresenter(false);

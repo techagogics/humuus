@@ -175,7 +175,7 @@ export default function SharedTextInput(props: any) {
 
             presences = json.presences as Object;
 
-            setIsHost(json.host == nakamaRef.current.player?.id);
+            setIsHost(json.host == nakamaRef.current.session?.user_id);
 
             listofUsernames = [];
 

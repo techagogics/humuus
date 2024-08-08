@@ -13,7 +13,7 @@ function PlayerList(props: any) {
           {props.users.map((value: string, num: number) => (
             <div
               className={
-                'flex items-center justify-center bg-white rounded-2xl text-xl font-bold ' +
+                'flex items-center justify-center bg-white rounded-2xl text-xl font-bold text-center p-4 ' +
                 (props.users.length <= 10 && 'h-36')
               }
               key={num}
