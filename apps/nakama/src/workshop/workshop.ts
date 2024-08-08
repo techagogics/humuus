@@ -26,6 +26,7 @@ let workshop_MatchInit: nkruntime.MatchInitFunction<workshop_State> = function (
     playing: false,
     workshopData: workshop,
     currentNode: 0,
+    answered: false,
     promisedAnswer: false,
     countAnswers: 0,
     waitTicks: 0,
@@ -118,9 +119,19 @@ let workshop_MatchJoin: nkruntime.MatchJoinFunction<workshop_State> = function (
 
     // Check if we must send a message to this user to update them on the current game state.
     if (state.playing) {
-      state = sendUpdate(state, dispatcher, workshop_Tickrate);
-    } else {
-      logger.debug('player %s rejoined game', presence.userId);
+      state = sendUpdate(state, dispatcher, workshop_Tickrate, presence);
+
+      if (state.answered) {
+        let answer = {
+          answer: state.workshopData[state.currentNode].answer,
+        };
+
+        dispatcher.broadcastMessage(
+          defaultQuiz_OpCode.ANSWER,
+          JSON.stringify(answer),
+          [presence]
+        );
+      }
     }
   }
 
@@ -141,10 +152,11 @@ let workshop_MatchLeave: nkruntime.MatchLeaveFunction<workshop_State> =
       logger.info('Player: %s left match: %s.', presence.userId, ctx.matchId);
       state.presences[presence.userId] = null;
 
-      if (presence.userId == state.matchHost && !state.playing) {
+      // Close Match if Host leaves during Lobby Phase
+      /*if (presence.userId == state.matchHost && !state.playing) {
         dispatcher.broadcastMessage(workshop_OpCode.LEAVE, JSON.stringify({}));
         return null;
-      }
+      }*/
     }
 
     let msg: workshop_PlayerListMessage = {
@@ -169,7 +181,7 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
   state: workshop_State,
   messages: nkruntime.MatchMessage[]
 ) {
-  if (workshop_connectedPlayers(state) + state.joinsInProgress === 0) {
+  if (workshop_connectedPlayers(state, true) + state.joinsInProgress === 0) {
     state.emptyTicks++;
     if (state.emptyTicks >= workshop_MaxEmptyTicks) {
       // Match has been empty for too long, close it.
@@ -227,12 +239,15 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
     }
 
     if (state.waitTicks == 0 && state.promisedAnswer) {
-      state.countAnswers = workshop_connectedPlayers(state);
+      state.countAnswers = workshop_connectedPlayers(
+        state,
+        !state.hostAsPresenter
+      );
     }
 
     if (
       state.countAnswers >=
-      workshop_connectedPlayers(state) - (state.hostAsPresenter ? 1 : 0)
+      workshop_connectedPlayers(state, !state.hostAsPresenter)
     ) {
       dispatcher.broadcastMessage(defaultQuiz_OpCode.DONE, JSON.stringify({}));
 
@@ -247,6 +262,7 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
 
       state.countAnswers = 0;
       state.promisedAnswer = false;
+      state.answered = true;
 
       if (state.autoSkip) {
         state.waitTicks =

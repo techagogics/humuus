@@ -14,6 +14,7 @@ import ImageQuizNode from '@/components/ui/imageQuizNode';
 import DefaultQuiz from '@/components/ui/DefaultQuiz';
 import Countdown from '@/components/ui/Countdown';
 import Scoreboard from '@/components/ui/Scoreboard';
+import { render } from 'react-dom';
 
 export default function Workshop(props: any) {
   const [isHost, setIsHost] = useState<boolean>(false);
@@ -81,6 +82,8 @@ export default function Workshop(props: any) {
         await timeout(500);
       }
 
+      setCurrentNode(NodeType.Lobby);
+
       console.log(`MatchId: ${tempMatchID}`);
 
       if (tempMatchID == undefined) {
@@ -100,8 +103,6 @@ export default function Workshop(props: any) {
         nakamaRef.current.socket.disconnect(true);
         navigate('/');
       }
-
-      setCurrentNode(NodeType.Lobby);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -121,6 +122,8 @@ export default function Workshop(props: any) {
   //------------------------------------------------------------
 
   const [nodeData, setNodeDate] = useState<Object>({});
+
+  const [index, setIndex] = useState<number>(0);
 
   const [answer, setAnswer] = useState<Array<number>>([]);
 
@@ -168,7 +171,6 @@ export default function Workshop(props: any) {
 
       let presences: Object;
       let listofUsernames: Array<string>;
-      let listofUsernamesHTML: string;
 
       if (typeof json === 'object' && json !== null) {
         switch (matchState.op_code) {
@@ -204,6 +206,8 @@ export default function Workshop(props: any) {
             setAnswer([]);
 
             myAnswer.current = [];
+
+            setIndex(json.currentNode);
 
             setCurrentNode(json.nodeType);
 
@@ -305,22 +309,25 @@ export default function Workshop(props: any) {
   function renderComponent(nodeType: number) {
     switch (nodeType) {
       case NodeType.Lobby:
-        return <PlayerList isHost={isHost} users={playerList} />;
+        return <PlayerList key={index} isHost={isHost} users={playerList} />;
 
       case NodeType.Scoreboard:
-        return <Scoreboard scoreboard={nodeData} />;
+        return <Scoreboard key={index} scoreboard={nodeData} />;
 
       case NodeType.Countdown:
-        return <Countdown time={timeLeft} />;
+        return <Countdown key={index} time={timeLeft} />;
 
       case NodeType.Headline:
         let tempHeadline = nodeData as { text: string };
-        return <Headline timeLeft={timeLeft} text={tempHeadline.text} />;
+        return (
+          <Headline key={index} timeLeft={timeLeft} text={tempHeadline.text} />
+        );
 
       case NodeType.ImgQuiz:
         let tempImgQuiz = nodeData as { text: string; images: Array<string> };
         return (
           <ImageQuizNode
+            key={index}
             setAnswer={(num: Array<number>) => {
               myAnswer.current = num;
             }}
@@ -341,6 +348,7 @@ export default function Workshop(props: any) {
 
         return (
           <DefaultQuiz
+            key={index}
             setAnswer={(num: Array<number>) => {
               myAnswer.current = num;
             }}
@@ -354,7 +362,7 @@ export default function Workshop(props: any) {
         );
     }
 
-    return <Headline timeLeft={timeLeft} text="Loading..." />;
+    return <Headline key={index} timeLeft={timeLeft} text="Loading..." />;
   }
 
   return (

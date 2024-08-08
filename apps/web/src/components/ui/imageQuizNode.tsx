@@ -32,7 +32,7 @@ function ImageQuizNode(props: any) {
       if (props.answer < 0) {
         setMyAnswer(-1);
         setCurrentAnswer(-1);
-        props.sendAnswer(-1);
+        props.setAnswer(-1);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

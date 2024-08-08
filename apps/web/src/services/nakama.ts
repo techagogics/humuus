@@ -36,6 +36,7 @@ export default class Nakama {
 
     let deviceId = LocalStorage.getItem(DEVICE_ID_KEY);
 
+    /*
     let sessionToken = LocalStorage.getItem(SESSION_TOKEN);
 
     let sessionRefreshToken = LocalStorage.getItem(SESSION_REFRESH_TOKEN);
@@ -47,7 +48,7 @@ export default class Nakama {
         this.session = tempSession;
         console.log('Restored Session');
       }
-    }
+    }*/
 
     if (this.session == null) {
       console.log('New Session');

@@ -16,6 +16,8 @@ interface workshop_State {
 
   currentNode: number;
 
+  answered: boolean;
+
   promisedAnswer: boolean;
 
   countAnswers: number;
@@ -76,11 +78,17 @@ interface workshop_UpdateMessage {
 
 // ---------------------------- Utility Functions ---------------------------- //
 
-function workshop_connectedPlayers(s: workshop_State): number {
+function workshop_connectedPlayers(
+  s: workshop_State,
+  countHost: boolean
+): number {
   let count = 0;
   for (const p of Object.keys(s.presences)) {
     if (s.presences[p] !== null) {
-      count++;
+      if (!countHost && s.presences[p].userId == s.matchHost) {
+      } else {
+        count++;
+      }
     }
   }
   return count;
@@ -183,21 +191,18 @@ const CountdownNode: WorkshopNode = {
 let workshop = [
   CountdownNode,
   QuizNode,
-  ScoreboardNode,
   QuizNode,
   ScoreboardNode,
-  QuizNode,
-  ScoreboardNode,
-  QuizNode,
-  ScoreboardNode,
-  QuizNode,
+  ImgNode,
+  ImgNode,
   ScoreboardNode,
 ];
 
 function sendUpdate(
   state: workshop_State,
   dispatcher: nkruntime.MatchDispatcher,
-  tickRate: number
+  tickRate: number,
+  recipient?: nkruntime.Presence
 ) {
   let update;
 
@@ -205,22 +210,36 @@ function sendUpdate(
 
   if (state.workshopData[state.currentNode].type == NodeType.Scoreboard) {
     update = {
+      currentNode: state.currentNode,
+      workshopLength: state.workshopData.length,
       nodeType: state.workshopData[state.currentNode].type,
       nodeData: renderScoreboard(state),
     };
   } else {
     update = {
+      currentNode: state.currentNode,
+      workshopLength: state.workshopData.length,
       nodeType: state.workshopData[state.currentNode].type,
       nodeData: state.workshopData[state.currentNode].data,
     };
+  }
+
+  if (typeof recipient !== 'undefined') {
+    dispatcher.broadcastMessage(
+      workshop_OpCode.UPDATE,
+      JSON.stringify(update),
+      [recipient]
+    );
+    return state;
+  } else {
+    dispatcher.broadcastMessage(workshop_OpCode.UPDATE, JSON.stringify(update));
   }
 
   state.countAnswers = 0;
   state.waitTicks = 0;
   state.promisedAnswer = false;
   state.autoSkip = false;
-
-  dispatcher.broadcastMessage(workshop_OpCode.UPDATE, JSON.stringify(update));
+  state.answered = false;
 
   if (state.workshopData[state.currentNode].settings.secondsAutoNext > 0) {
     state.waitTicks =
