@@ -15,7 +15,7 @@ import DefaultQuiz from '@/components/ui/DefaultQuiz';
 import Countdown from '@/components/ui/Countdown';
 import Scoreboard from '@/components/ui/Scoreboard';
 
-export default function SharedTextInput(props: any) {
+export default function Workshop(props: any) {
   const [isHost, setIsHost] = useState<boolean>(false);
 
   enum NodeType {
