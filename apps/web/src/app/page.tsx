@@ -44,6 +44,7 @@ export default function Home() {
     let tempMatch = await nakamaRef.current.getMatchURL(matchJoinCode);
 
     if (tempMatch) {
+      nakamaRef.current.socket.disconnect(true);
       navigate(tempMatch);
     }
   }
@@ -53,6 +54,7 @@ export default function Home() {
 
     let newMatch = await nakamaRef.current.startMatch(matchType);
 
+    nakamaRef.current.socket.disconnect(true);
     navigate(newMatch);
   }
 

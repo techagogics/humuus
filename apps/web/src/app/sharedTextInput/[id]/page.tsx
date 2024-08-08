@@ -63,6 +63,7 @@ export default function SharedTextInput(props: any) {
       console.log(`MatchId: ${tempMatchID}`);
 
       if (tempMatchID == undefined) {
+        nakamaRef.current.socket.disconnect(true);
         navigate('/');
       }
 
@@ -75,6 +76,7 @@ export default function SharedTextInput(props: any) {
       try {
         await nakamaRef.current.socket.joinMatch(tempMatchID);
       } catch (err) {
+        nakamaRef.current.socket.disconnect(true);
         navigate('/');
       }
     }
@@ -87,6 +89,7 @@ export default function SharedTextInput(props: any) {
     try {
       await nakamaRef.current.socket.leaveMatch(match.current.id);
     } finally {
+      nakamaRef.current.socket.disconnect(true);
       navigate('/');
     }
   }
