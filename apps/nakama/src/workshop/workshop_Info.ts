@@ -263,6 +263,36 @@ function sendUpdate(
   return state;
 }
 
+function sendPlayerList(
+  state: workshop_State,
+  dispatcher: nkruntime.MatchDispatcher
+) {
+  let listofUsernames = [];
+
+  for (let userID in state.presences) {
+    if (
+      state.presences[userID] !== null && state.hostAsPresenter
+        ? userID != state.matchHost
+        : true
+    ) {
+      listofUsernames.push(state.presences[userID]?.username);
+    }
+  }
+
+  listofUsernames.sort();
+
+  let playerList = {
+    playerList: listofUsernames,
+    host: state.matchHost,
+    isPresenter: state.hostAsPresenter,
+  };
+  // Send a message to the user that just joined.
+  dispatcher.broadcastMessage(
+    workshop_OpCode.PLAYERLIST,
+    JSON.stringify(playerList)
+  );
+}
+
 function sendTimer(
   state: workshop_State,
   dispatcher: nkruntime.MatchDispatcher
@@ -278,7 +308,7 @@ function renderScoreboard(state: workshop_State): object {
   let scoreboard: { [key: string]: { username: string; score: number } } = {};
 
   for (let userID in state.presences) {
-    if (userID != state.matchHost) {
+    if (state.hostAsPresenter ? userID != state.matchHost : true) {
       scoreboard[userID] = {
         username: String(state.presences[userID]?.username),
         score: 0,

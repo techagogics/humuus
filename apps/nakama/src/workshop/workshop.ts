@@ -106,16 +106,7 @@ let workshop_MatchJoin: nkruntime.MatchJoinFunction<workshop_State> = function (
       state.matchHost = presence.userId;
     }
 
-    let update: workshop_PlayerListMessage = {
-      presences: state.presences,
-      host: state.matchHost,
-      isPresenter: state.hostAsPresenter,
-    };
-    // Send a message to the user that just joined.
-    dispatcher.broadcastMessage(
-      workshop_OpCode.PLAYERLIST,
-      JSON.stringify(update)
-    );
+    sendPlayerList(state, dispatcher);
 
     // Check if we must send a message to this user to update them on the current game state.
     if (state.playing) {
@@ -159,15 +150,7 @@ let workshop_MatchLeave: nkruntime.MatchLeaveFunction<workshop_State> =
       }*/
     }
 
-    let msg: workshop_PlayerListMessage = {
-      presences: state.presences,
-      host: state.matchHost,
-      isPresenter: state.hostAsPresenter,
-    };
-    dispatcher.broadcastMessage(
-      workshop_OpCode.PLAYERLIST,
-      JSON.stringify(msg)
-    );
+    sendPlayerList(state, dispatcher);
 
     return { state };
   };
@@ -231,6 +214,17 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
     return { state };
   }
 
+  let hostIsAlone = false;
+
+  if (
+    workshop_connectedPlayers(state, true) < 2 &&
+    workshop_connectedPlayers(state, true) >
+      workshop_connectedPlayers(state, false) &&
+    state.hostAsPresenter
+  ) {
+    hostIsAlone = true;
+  }
+
   if (state.promisedAnswer || state.autoSkip) {
     state.waitTicks--;
 
@@ -239,15 +233,15 @@ let workshop_MatchLoop: nkruntime.MatchLoopFunction<workshop_State> = function (
     }
 
     if (state.waitTicks == 0 && state.promisedAnswer) {
-      state.countAnswers = workshop_connectedPlayers(
-        state,
-        !state.hostAsPresenter
-      );
+      state.countAnswers =
+        workshop_connectedPlayers(state, !state.hostAsPresenter) +
+        (hostIsAlone ? 1 : 0);
     }
 
     if (
       state.countAnswers >=
-      workshop_connectedPlayers(state, !state.hostAsPresenter)
+      workshop_connectedPlayers(state, !state.hostAsPresenter) +
+        (hostIsAlone ? 1 : 0)
     ) {
       dispatcher.broadcastMessage(defaultQuiz_OpCode.DONE, JSON.stringify({}));
 

@@ -19,6 +19,8 @@ import { render } from 'react-dom';
 export default function Workshop(props: any) {
   const [isHost, setIsHost] = useState<boolean>(false);
 
+  const [isPresenter, setIsPresenter] = useState<boolean>(false);
+
   enum NodeType {
     Lobby = 0,
     Scoreboard = 1,
@@ -182,6 +184,17 @@ export default function Workshop(props: any) {
 
             setIsHost(json.host == nakamaRef.current.session?.user_id);
 
+            if (
+              json.host == nakamaRef.current.session?.user_id &&
+              json.isPresenter
+            ) {
+              setIsPresenter(true);
+            } else {
+              setIsPresenter(false);
+            }
+
+            /*
+
             listofUsernames = [];
 
             for (const [, value] of Object.entries(presences)) {
@@ -190,9 +203,11 @@ export default function Workshop(props: any) {
               }
             }
 
-            listofUsernames.sort();
+            listofUsernames.sort();*/
 
-            setPlayerList(listofUsernames);
+            console.log('PlayerList: ' + json.playerList);
+
+            setPlayerList(json.playerList);
 
             // Handle START message
             break;
@@ -336,7 +351,7 @@ export default function Workshop(props: any) {
             images={tempImgQuiz.images}
             answer={answer}
             timeLeft={timeLeft}
-            onlyShow={isHost}
+            onlyShow={isPresenter}
           />
         );
 
@@ -357,7 +372,7 @@ export default function Workshop(props: any) {
             answers={tempDefaultQuiz.options}
             answer={answer}
             timeLeft={timeLeft}
-            onlyShow={isHost}
+            onlyShow={isPresenter}
           />
         );
     }

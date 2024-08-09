@@ -59,6 +59,8 @@ function ImageQuizNode(props: any) {
           <div
             className={
               'relative w-full overflow-hidden rounded-xl box-border border-8 ' +
+              (!props.onlyShow ? 'cursor-pointer' : ' ') +
+              ' ' +
               (currentAnswer == 0 && correctAnswer < 0
                 ? 'border-yellow-300'
                 : ' ') +
@@ -81,6 +83,8 @@ function ImageQuizNode(props: any) {
           <div
             className={
               'relative w-full overflow-hidden rounded-xl box-border border-8 ' +
+              (!props.onlyShow ? 'cursor-pointer' : ' ') +
+              ' ' +
               (currentAnswer == 1 && correctAnswer < 0
                 ? 'border-yellow-300'
                 : ' ') +
