@@ -6,7 +6,9 @@
     "lint": "turbo lint",
     "type-check": "turbo type-check",
     "clean": "turbo clean && rm -rf ",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "nakama-backup-db": "pnpm --prefix ./apps/nakama/ run db-backup",
+    "nakama-load-db": "pnpm --prefix ./apps/nakama/ run db-load-backup"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
