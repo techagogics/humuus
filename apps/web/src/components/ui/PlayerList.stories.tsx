@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import PlayerList from './PlayerList';
+import PlayerList from './PlayerListNode';
 
 const meta: Meta<typeof PlayerList> = {
   title: 'PlayerList',

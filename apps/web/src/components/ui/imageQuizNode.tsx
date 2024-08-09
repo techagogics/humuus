@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
-function ImageQuizNode(props: any) {
+function ImageQuiz(props: any) {
   const [correctAnswer, setCorrectAnswer] = useState(-1);
 
   const [myAnswer, setMyAnswer] = useState(-1);
@@ -110,4 +110,4 @@ function ImageQuizNode(props: any) {
   );
 }
 
-export default ImageQuizNode;
+export default ImageQuiz;

@@ -8,12 +8,12 @@ import { navigate } from '@/services/redirect';
 
 import Header from '@/components/ui/Header';
 import Footer from '@/components/ui/Footer';
-import PlayerList from '@/components/ui/PlayerList';
-import Headline from '@/components/ui/Headline';
-import ImageQuizNode from '@/components/ui/imageQuizNode';
-import DefaultQuiz from '@/components/ui/DefaultQuiz';
-import Countdown from '@/components/ui/Countdown';
-import Scoreboard from '@/components/ui/Scoreboard';
+import PlayerList from '@/components/ui/PlayerListNode';
+import Headline from '@/components/ui/HeadlineNode';
+import ImageQuiz from '@/components/ui/ImageQuizNode';
+import DefaultQuiz from '@/components/ui/DefaultQuizNode';
+import Countdown from '@/components/ui/CountdownNode';
+import Scoreboard from '@/components/ui/ScoreboardNode';
 
 export default function Workshop(props: any) {
   const [isHost, setIsHost] = useState<boolean>(false);
@@ -329,7 +329,7 @@ export default function Workshop(props: any) {
       case NodeType.ImgQuiz:
         let tempImgQuiz = nodeData as { text: string; images: Array<string> };
         return (
-          <ImageQuizNode
+          <ImageQuiz
             key={index}
             setAnswer={(num: Array<number>) => {
               myAnswer.current = num;
@@ -378,18 +378,20 @@ export default function Workshop(props: any) {
       <div className="w-full h-full max-h-full max-w-full overflow-hidden flex flex-col items-center justify-center p-10 max-md:p-5">
         {renderComponent(currentNode)}
       </div>
-      <Footer
-        forwardButtonText={
-          currentNode < 1
-            ? 'Start'
-            : index >= workshopLength - 1
-              ? 'Ende'
-              : 'Weiter'
-        }
-        nextButton={startAndNext}
-        backButton={back}
-        isHost={isHost}
-      />
+      {isHost && (
+        <Footer
+          forwardButtonText={
+            currentNode < 1
+              ? 'Start'
+              : index >= workshopLength - 1
+                ? 'Ende'
+                : 'Weiter'
+          }
+          nextButton={startAndNext}
+          backButton={back}
+          isHost={isHost}
+        />
+      )}
     </div>
   );
 }
