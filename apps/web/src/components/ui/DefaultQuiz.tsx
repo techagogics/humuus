@@ -39,7 +39,7 @@ function DefaultQuiz(props: any) {
 
   return (
     <>
-      <p className="text-center">
+      <p className="text-center max-md:hidden">
         {correctAnswer[0] < 0 ? (
           props.timeLeft != null ? (
             <b>Zeit zum Antworten: {props.timeLeft}</b>
@@ -52,7 +52,7 @@ function DefaultQuiz(props: any) {
           <b>Auflösung!</b>
         )}
       </p>
-      <p className="font-black text-2xl mb-5">{props.text}</p>
+      <p className="font-black text-2xl mb-5 max-md:hidden">{props.text}</p>
       <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-4 text-black">
         {props.answers.map((value: string, num: number) => (
           <div

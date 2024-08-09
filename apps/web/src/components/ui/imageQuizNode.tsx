@@ -40,7 +40,7 @@ function ImageQuizNode(props: any) {
 
   return (
     <>
-      <p className="text-center">
+      <p className="text-center max-md:hidden">
         {correctAnswer < 0 ? (
           props.timeLeft != null ? (
             <b>Zeit zum Antworten: {props.timeLeft}</b>
@@ -53,7 +53,7 @@ function ImageQuizNode(props: any) {
           <b>Auflösung!</b>
         )}
       </p>
-      <p className="font-black text-2xl mb-5">{props.text}</p>
+      <p className="font-black text-2xl mb-5 max-md:hidden">{props.text}</p>
       <div className="w-full overflow-hidden">
         <div className="relativ m-auto aspect-[2/1] max-md:aspect-[1/2] max-h-full grid grid-cols-2 max-md:grid-cols-1 max-md:grid-rows-2 gap-4">
           <div

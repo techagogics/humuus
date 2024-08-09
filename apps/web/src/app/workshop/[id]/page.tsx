@@ -14,7 +14,6 @@ import ImageQuizNode from '@/components/ui/imageQuizNode';
 import DefaultQuiz from '@/components/ui/DefaultQuiz';
 import Countdown from '@/components/ui/Countdown';
 import Scoreboard from '@/components/ui/Scoreboard';
-import { render } from 'react-dom';
 
 export default function Workshop(props: any) {
   const [isHost, setIsHost] = useState<boolean>(false);

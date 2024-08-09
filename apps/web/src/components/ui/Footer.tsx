@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 function Footer(props: any) {
   return (
-    <nav className="flex p-10 gap-4 text-white text-base max-md:hidden">
+    <nav className="flex p-10 gap-4 text-white text-base">
       {props.forwardButtonText != undefined && props.isHost ? (
         <>
           <Button onClick={() => props.backButton()} size="icon">
