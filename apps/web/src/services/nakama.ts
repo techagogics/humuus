@@ -127,7 +127,7 @@ export default class Nakama {
     console.log('SESSIONVERBINDUNG ERFOLGREICH', this.session);
   }
 
-  async startMatch(matchType: string): Promise<string> {
+  async startMatch(matchType: string, workshopKey: string): Promise<string> {
     if (!this.session || !this.socket) {
       console.error('Session or socket not found!');
       return '';
@@ -144,6 +144,7 @@ export default class Nakama {
     // Returns the MatchID and URL {matchId, url}
     const newMatchID = await this.client.rpc(this.session, 'Create_Match', {
       matchType: matchType,
+      workshopKey: workshopKey,
     });
 
     let payload = newMatchID.payload as Payload;
@@ -245,7 +246,11 @@ export default class Nakama {
     return payload.matchId;
   }
 
-  async writeDataToStorage(key: string, data: Array<any>): Promise<void> {
+  async writeDataToStorage(
+    collection: string,
+    key: string,
+    data: Array<any>
+  ): Promise<void> {
     if (!this.session || !this.socket) {
       console.error('Session or socket not found!');
       return;
@@ -259,7 +264,7 @@ export default class Nakama {
 
     const newMatch = await this.client.rpc(this.session, 'Storage_API', {
       operation: API.WRITE,
-      collection: 'workshops',
+      collection: collection,
       key: key,
       data: data,
     });

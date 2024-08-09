@@ -31,6 +31,7 @@ export default function Workshop(props: any) {
   }
 
   const [currentNode, setCurrentNode] = useState<number>(-1);
+  const [workshopLength, setWorkshopLength] = useState<number>(0);
 
   //------------------------------------------------------------
   // Base Logic - Should be used as Base for Multiplayer
@@ -193,18 +194,6 @@ export default function Workshop(props: any) {
               setIsPresenter(false);
             }
 
-            /*
-
-            listofUsernames = [];
-
-            for (const [, value] of Object.entries(presences)) {
-              if (value !== null && value.userId != json.host) {
-                listofUsernames.push(value.username);
-              }
-            }
-
-            listofUsernames.sort();*/
-
             console.log('PlayerList: ' + json.playerList);
 
             setPlayerList(json.playerList);
@@ -225,6 +214,8 @@ export default function Workshop(props: any) {
             setIndex(json.currentNode);
 
             setCurrentNode(json.nodeType);
+
+            setWorkshopLength(json.workshopLength);
 
             setNodeDate(json.nodeData);
 
@@ -391,7 +382,13 @@ export default function Workshop(props: any) {
         {renderComponent(currentNode)}
       </div>
       <Footer
-        forwardButtonText={currentNode < 1 ? 'Start' : 'Weiter'}
+        forwardButtonText={
+          currentNode < 1
+            ? 'Start'
+            : index >= workshopLength - 1
+              ? 'Ende'
+              : 'Weiter'
+        }
         nextButton={startAndNext}
         backButton={back}
         isHost={isHost}

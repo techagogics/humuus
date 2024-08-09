@@ -37,8 +37,8 @@ let guessTheFake_MatchInit: nkruntime.MatchInitFunction<guessTheFake_State> =
 
     let objectIds: nkruntime.StorageReadRequest[] = [
       {
-        collection: 'workshops',
-        key: 'guess_the_fake',
+        collection: GAMETYPE_guessTheFake,
+        key: String(params['workshopKey']),
         userId: '00000000-0000-0000-0000-000000000000',
       },
     ];

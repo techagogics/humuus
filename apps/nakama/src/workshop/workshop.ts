@@ -24,7 +24,7 @@ let workshop_MatchInit: nkruntime.MatchInitFunction<workshop_State> = function (
     presences: {},
     joinsInProgress: 0,
     playing: false,
-    workshopData: workshop,
+    workshopData: [],
     currentNode: 0,
     answered: false,
     promisedAnswer: false,
@@ -35,6 +35,24 @@ let workshop_MatchInit: nkruntime.MatchInitFunction<workshop_State> = function (
     matchHost: '',
     hostAsPresenter: true,
   };
+
+  let objectIds: nkruntime.StorageReadRequest[] = [
+    {
+      collection: GAMETYPE_workshop,
+      key: String(params['workshopKey']),
+      userId: '00000000-0000-0000-0000-000000000000',
+    },
+  ];
+
+  let objects: nkruntime.StorageObject[] = [];
+
+  try {
+    objects = nk.storageRead(objectIds);
+  } catch (error) {
+    logger.info('Mein Error: %q', error);
+  }
+
+  state.workshopData = objects[0].value.data;
 
   return {
     state,

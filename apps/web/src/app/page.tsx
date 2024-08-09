@@ -49,10 +49,10 @@ export default function Home() {
     }
   }
 
-  async function createMatch(matchType: string) {
+  async function createMatch(matchType: string, workshopKey: string) {
     if (!nakamaRef.current?.socket || !nakamaRef.current?.session) return;
 
-    let newMatch = await nakamaRef.current.startMatch(matchType);
+    let newMatch = await nakamaRef.current.startMatch(matchType, workshopKey);
 
     nakamaRef.current.socket.disconnect(true);
     navigate(newMatch);
@@ -83,17 +83,16 @@ export default function Home() {
             </Button>
           </div>
           <div className="flex flex-wrap gap-10 max-md:hidden">
-            <Button onClick={() => createMatch('workshop')} className="m-auto">
-              Workshop!
-            </Button>
             <Button
-              onClick={() => createMatch(GameType.defaultQuiz)}
+              onClick={() => createMatch('workshop', 'deepfake_detective_quiz')}
               className="m-auto"
             >
               Quiz Game!
             </Button>
             <Button
-              onClick={() => createMatch(GameType.guessTheFake)}
+              onClick={() =>
+                createMatch('workshop', 'deepfake_detective_guessTheFake')
+              }
               className="m-auto"
             >
               Guess The Fake Game!

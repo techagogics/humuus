@@ -119,7 +119,7 @@ function guessTheFake_BuildImgArray(
 
     let randomIndex = getRandomInt(2);
 
-    temp.images[randomIndex] = 'fake/' + randomFake;
+    temp.images[randomIndex] = randomFake;
 
     temp.answer = randomIndex + 1;
 
@@ -129,7 +129,7 @@ function guessTheFake_BuildImgArray(
       randomIndex = 1;
     }
 
-    temp.images[randomIndex] = 'real/' + randomReal;
+    temp.images[randomIndex] = randomReal;
 
     tempArray.push(temp);
   }

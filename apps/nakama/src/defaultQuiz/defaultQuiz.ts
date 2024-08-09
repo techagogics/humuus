@@ -38,8 +38,8 @@ let defaultQuiz_MatchInit: nkruntime.MatchInitFunction<defaultQuiz_State> =
 
     let objectIds: nkruntime.StorageReadRequest[] = [
       {
-        collection: 'workshops',
-        key: 'deepfake_detective',
+        collection: GAMETYPE_defaultQuiz,
+        key: String(params['workshopKey']),
         userId: '00000000-0000-0000-0000-000000000000',
       },
     ];

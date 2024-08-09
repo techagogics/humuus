@@ -5,11 +5,12 @@ function rpcCreateMatch(
   payload: string
 ): string {
   // Return if no match type in payload
-  if(payload.length === 0) {
-    return JSON.stringify({success: false});
+  if (payload.length === 0) {
+    return JSON.stringify({ success: false });
   }
 
   let matchType = JSON.parse(payload).matchType;
+  let workshopKey = JSON.parse(payload).workshopKey;
 
   // Creating a random join code that isn't used by a match yet.
   let isUniqueCode = false;
@@ -32,7 +33,11 @@ function rpcCreateMatch(
 
   // Try to create a match and return success with match id.
   try {
-    let matchId = nk.matchCreate(matchType, { joinCode: randomCode, creator: context.userId });
+    let matchId = nk.matchCreate(matchType, {
+      joinCode: randomCode,
+      creator: context.userId,
+      workshopKey: workshopKey,
+    });
     return JSON.stringify({
       success: true,
       id: matchId,
