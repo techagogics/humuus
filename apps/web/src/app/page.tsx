@@ -6,8 +6,6 @@ import Nakama from '@/services/nakama';
 
 import { navigate } from '@/services/redirect';
 
-import { GameType } from '@/lib/matches';
-
 import Header from '@/components/ui/Header';
 
 import Footer from '@/components/ui/Footer';
@@ -15,7 +13,6 @@ import Footer from '@/components/ui/Footer';
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSeparator,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 

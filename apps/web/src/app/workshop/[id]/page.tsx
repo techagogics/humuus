@@ -194,8 +194,6 @@ export default function Workshop(props: any) {
               setIsPresenter(false);
             }
 
-            console.log('PlayerList: ' + json.playerList);
-
             setPlayerList(json.playerList);
 
             // Handle START message

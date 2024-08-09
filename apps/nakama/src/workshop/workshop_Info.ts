@@ -78,22 +78,6 @@ interface workshop_UpdateMessage {
 
 // ---------------------------- Utility Functions ---------------------------- //
 
-function workshop_connectedPlayers(
-  s: workshop_State,
-  countHost: boolean
-): number {
-  let count = 0;
-  for (const p of Object.keys(s.presences)) {
-    if (s.presences[p] !== null) {
-      if (!countHost && s.presences[p].userId == s.matchHost) {
-      } else {
-        count++;
-      }
-    }
-  }
-  return count;
-}
-
 enum NodeType {
   Lobby = 0,
   Scoreboard = 1,
@@ -112,6 +96,8 @@ interface WorkshopNode {
   data: object;
   answer: any;
 }
+
+// Example Nodes
 
 const QuizNode: WorkshopNode = {
   type: NodeType.DefaultQuiz,
@@ -188,15 +174,7 @@ const CountdownNode: WorkshopNode = {
   answer: null,
 };
 
-let workshop = [
-  CountdownNode,
-  QuizNode,
-  QuizNode,
-  ScoreboardNode,
-  ImgNode,
-  ImgNode,
-  ScoreboardNode,
-];
+// Send Message Functions
 
 function sendUpdate(
   state: workshop_State,
@@ -270,12 +248,10 @@ function sendPlayerList(
   let listofUsernames = [];
 
   for (let userID in state.presences) {
-    if (
-      state.presences[userID] !== null && state.hostAsPresenter
-        ? userID != state.matchHost
-        : true
-    ) {
-      listofUsernames.push(state.presences[userID]?.username);
+    if (state.hostAsPresenter ? userID != state.matchHost : true) {
+      if (state.presences[userID] !== null) {
+        listofUsernames.push(state.presences[userID]?.username);
+      }
     }
   }
 
@@ -354,4 +330,20 @@ function renderScoreboard(state: workshop_State): object {
   }
 
   return scoreboard;
+}
+
+function workshop_connectedPlayers(
+  s: workshop_State,
+  countHost: boolean
+): number {
+  let count = 0;
+  for (const p of Object.keys(s.presences)) {
+    if (s.presences[p] !== null) {
+      if (!countHost && s.presences[p].userId == s.matchHost) {
+      } else {
+        count++;
+      }
+    }
+  }
+  return count;
 }
